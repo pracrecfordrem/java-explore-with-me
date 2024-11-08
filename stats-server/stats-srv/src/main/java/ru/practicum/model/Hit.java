@@ -12,7 +12,7 @@ public class Hit implements Comparable<Hit> {
 
     @Override
     public int compareTo(Hit o) {
-        if (o.hits == this.hits) {
+        if (o.hits.equals(this.hits)) {
             return 0;
         }
         return o.hits > this.hits ? 1 : -1;
