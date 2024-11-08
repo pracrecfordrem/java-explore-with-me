@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface StatsRepository extends JpaRepository<Stats,Long> {
+
     @Query(value =
                     "select new ru.practicum.model.Hit (s.app,\n" +
                     "       s.uri,\n" +
@@ -21,6 +22,7 @@ public interface StatsRepository extends JpaRepository<Stats,Long> {
                     " group by s.app,\n" +
                     "      \t  s.uri ")
     List<Hit> getHits(@Param("start")LocalDateTime start, @Param("end")LocalDateTime end, @Param("values")List<String> values);
+
     @Query(value =
             "select new ru.practicum.model.Hit (s.app,\n" +
                     "       s.uri,\n" +

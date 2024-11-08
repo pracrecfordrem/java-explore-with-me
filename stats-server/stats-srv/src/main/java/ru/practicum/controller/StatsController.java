@@ -16,10 +16,12 @@ import java.util.List;
 public class StatsController {
     private static final DateTimeFormatter CUSTOM_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final StatsService statsService;
+
     @PostMapping("/hit")
     public Stats post(@RequestBody StatsRequestDto statsRequestDto) {
         return statsService.post(statsRequestDto);
     }
+
     @GetMapping("/stats")
     public List<Hit> get(@RequestParam String start,
                          @RequestParam String end,

@@ -16,7 +16,9 @@ import java.util.List;
 @Service
 @AllArgsConstructor
 public class StatsService {
+
     private final StatsRepository statsRepository;
+
     public Stats post(StatsRequestDto statsRequestDto) {
         return statsRepository.save(StatsMapper.toStats(statsRequestDto));
     }
