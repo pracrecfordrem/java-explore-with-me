@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class Hit implements Comparable<Hit>{
+public class Hit implements Comparable<Hit> {
     private String app;
     private String uri;
     private Long hits;
