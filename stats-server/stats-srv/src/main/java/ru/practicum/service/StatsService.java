@@ -24,6 +24,6 @@ public class StatsService {
     }
 
     public List<Hit> get(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean isUnique) {
-        return isUnique ? statsRepository.getDistinctIpHits(start,end,uris) : statsRepository.getHits(start,end,uris);
+        return isUnique ? statsRepository.getDistinctIpHits(start,end,uris).stream().sorted().toList() : statsRepository.getHits(start,end,uris).stream().sorted().toList();
     }
 }
