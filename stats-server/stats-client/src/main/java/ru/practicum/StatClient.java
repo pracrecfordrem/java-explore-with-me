@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class StatClient extends BaseClient{
+public class StatClient extends BaseClient {
 
     private static final String API_PREFIX = "";
 
