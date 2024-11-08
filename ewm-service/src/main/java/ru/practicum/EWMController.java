@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class EWMController {
     private final StatClient statClient;
-    private static final String APP_NAME = "ewm-main-service";
-    @PostMapping("/events/2")
+    private static final String APP_NAME = "";
+    @PostMapping("")
     public void saveHit(HttpServletRequest request) {
         statClient.post(APP_NAME, request);
     }
