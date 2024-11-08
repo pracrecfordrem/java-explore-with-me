@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class EWMController {
     private final StatClient statClient;
     private static final String APP_NAME = "";
-    
+
     @PostMapping("")
     public void saveHit(HttpServletRequest request) {
         statClient.post(APP_NAME, request);
