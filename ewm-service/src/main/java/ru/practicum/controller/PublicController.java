@@ -6,7 +6,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.model.category.Category;
+import ru.practicum.model.event.Event;
+import ru.practicum.model.event.EventMapper;
+import ru.practicum.model.event.NewEventDto;
+import ru.practicum.model.location.Location;
+import ru.practicum.model.location.LocationMapper;
+import ru.practicum.model.user.User;
+import ru.practicum.repository.LocationRepository;
 import ru.practicum.service.CategoryService;
+import ru.practicum.service.EventService;
+import ru.practicum.service.UserService;
 
 import java.util.List;
 
@@ -16,6 +25,9 @@ import java.util.List;
 @Slf4j
 public class PublicController {
     private final CategoryService categoryService;
+    private final UserService userService;
+    private final EventService eventService;
+    private final LocationRepository locationRepository;
 
     @GetMapping("/categories")
     public List<Category> getCategories(@RequestParam(defaultValue = "0") Long from, @RequestParam(defaultValue = "10") Long size) {
@@ -29,6 +41,25 @@ public class PublicController {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         } else {
             return new ResponseEntity<>(category, HttpStatus.OK);
+        }
+    }
+
+    @PostMapping("/users/{userId}/events")
+    public ResponseEntity<Event> postEvent(
+                                              @RequestBody NewEventDto newEventDto,
+                                              @PathVariable Long userId
+                                             ) {
+        Category category = categoryService.getCategoryById(newEventDto.getCategory());
+        User user = userService.getUserById(userId);
+        Location location = locationRepository.save(LocationMapper.toLocation(newEventDto.getLocation()));
+        if (category == null || user == null) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        } else {
+            return new ResponseEntity<>(eventService.createEvent(EventMapper.toEvent(newEventDto,
+                                                            category,
+                                                            user,
+                                                            location)),
+                                         HttpStatus.CREATED);
         }
     }
 }

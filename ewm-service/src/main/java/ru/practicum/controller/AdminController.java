@@ -14,6 +14,8 @@ import ru.practicum.model.category.CategoryMappper;
 import ru.practicum.model.category.NewCategoryDto;
 import ru.practicum.service.UserService;
 
+import java.util.List;
+
 @AllArgsConstructor
 @RestController
 @RequestMapping(path = "/admin")
@@ -21,6 +23,13 @@ import ru.practicum.service.UserService;
 public class AdminController {
     private final CategoryService categoryService;
     private final UserService userService;
+
+    @GetMapping("/users")
+    public ResponseEntity<List<User>> getUsers(@RequestParam List<Long> ids,
+                                               @RequestParam(required = false, defaultValue = "0") Integer from,
+                                               @RequestParam(required = false, defaultValue = "10") Integer size) {
+        return new ResponseEntity<>(userService.getUsers(ids, from, size),HttpStatus.OK);
+    }
 
     @PostMapping("/categories")
     public ResponseEntity<Category> createCategory(@RequestBody NewCategoryDto newCategoryDto) {
@@ -36,6 +45,13 @@ public class AdminController {
     public ResponseEntity<Category> deleteCategory(@PathVariable Long catId) {
         categoryService.deleteCategory(catId);
         return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+    }
+
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<User> deleteUser(@PathVariable Long userId) {
+        userService.deleteUser(userId);
+        return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+
     }
 
     @PatchMapping("/categories/{catId}")
