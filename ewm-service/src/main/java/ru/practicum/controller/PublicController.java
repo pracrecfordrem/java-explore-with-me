@@ -11,12 +11,17 @@ import ru.practicum.model.event.EventMapper;
 import ru.practicum.model.event.NewEventDto;
 import ru.practicum.model.location.Location;
 import ru.practicum.model.location.LocationMapper;
+import ru.practicum.model.request.Request;
+import ru.practicum.model.request.RequestDto;
+import ru.practicum.model.request.RequestMapper;
 import ru.practicum.model.user.User;
 import ru.practicum.repository.LocationRepository;
 import ru.practicum.service.CategoryService;
 import ru.practicum.service.EventService;
+import ru.practicum.service.RequestService;
 import ru.practicum.service.UserService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @AllArgsConstructor
@@ -24,10 +29,12 @@ import java.util.List;
 @RequestMapping
 @Slf4j
 public class PublicController {
+
     private final CategoryService categoryService;
     private final UserService userService;
     private final EventService eventService;
     private final LocationRepository locationRepository;
+    private final RequestService requestService;
 
     @GetMapping("/categories")
     public List<Category> getCategories(@RequestParam(defaultValue = "0") Long from, @RequestParam(defaultValue = "10") Long size) {
@@ -62,4 +69,19 @@ public class PublicController {
                                          HttpStatus.CREATED);
         }
     }
+
+    @PostMapping("/users/{userId}/requests")
+    public ResponseEntity<RequestDto> postRequest(
+            @PathVariable Long userId,
+            @RequestParam Long eventId) {
+        User user = userService.getUserById(userId);
+        Event event = eventService.getEventById(eventId);
+        if (event == null || user == null) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        } else {
+            Request request = new Request(null,user,event, event.getRequestModeration() ? "PENDING":"APPROVED",LocalDateTime.now());
+            return new ResponseEntity<>(RequestMapper.toRequestDto(requestService.createRequest(request)),HttpStatus.CREATED);
+        }
+    }
+
 }

@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.model.event.Event;
+import ru.practicum.model.request.AdminRequest;
 import ru.practicum.model.user.NewUserDto;
 import ru.practicum.model.user.User;
 import ru.practicum.model.user.UserMapper;
@@ -12,8 +14,11 @@ import ru.practicum.service.CategoryService;
 import ru.practicum.model.category.Category;
 import ru.practicum.model.category.CategoryMappper;
 import ru.practicum.model.category.NewCategoryDto;
+import ru.practicum.service.EventService;
 import ru.practicum.service.UserService;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @AllArgsConstructor
@@ -21,14 +26,36 @@ import java.util.List;
 @RequestMapping(path = "/admin")
 @Slf4j
 public class AdminController {
+
+    private static final DateTimeFormatter CUSTOM_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final CategoryService categoryService;
     private final UserService userService;
+    private final EventService eventService;
 
     @GetMapping("/users")
     public ResponseEntity<List<User>> getUsers(@RequestParam List<Long> ids,
                                                @RequestParam(required = false, defaultValue = "0") Integer from,
                                                @RequestParam(required = false, defaultValue = "10") Integer size) {
         return new ResponseEntity<>(userService.getUsers(ids, from, size),HttpStatus.OK);
+    }
+
+    @GetMapping("/events")
+    public ResponseEntity<List<Event>> getEvents(@RequestParam(required = false) List<Long> users,
+                                                 @RequestParam(required = false) List<String> states,
+                                                 @RequestParam(required = false) List<Long> categories,
+                                                 @RequestParam(required = false) String rangeStart,
+                                                 @RequestParam(required = false) String rangeEnd,
+                                                 @RequestParam(required = false) Long from,
+                                                 @RequestParam(required = false) Long size) {
+        System.out.println(LocalDateTime.parse(rangeStart,CUSTOM_FORMATTER));
+        return new ResponseEntity<>(eventService.getEvents(users,
+                                                            states,
+                                                            categories,
+                                                            LocalDateTime.parse(rangeStart,CUSTOM_FORMATTER),
+                                                            LocalDateTime.parse(rangeEnd,CUSTOM_FORMATTER),
+                                                            from,
+                                                            size),HttpStatus.OK);
+
     }
 
     @PostMapping("/categories")
@@ -65,4 +92,20 @@ public class AdminController {
         }
     }
 
+    @PatchMapping("/events/{eventId}")
+    public ResponseEntity<Event> updateEvent(@RequestBody AdminRequest adminRequest,
+                                             @PathVariable Long eventId) {
+        System.out.println(adminRequest);
+        Event event = eventService.getEventById(eventId);
+        if (event == null) {
+            return new ResponseEntity<>(null,HttpStatus.NOT_FOUND);
+        } else if (event.getState() != null && event.getState().equals("PUBLISHED")) {
+            return new ResponseEntity<>(null,HttpStatus.CONFLICT);
+        } else {
+            if (adminRequest.getStateAction().equals("PUBLISH_EVENT")) {
+                event.setState("PUBLISHED");
+            }
+             return new ResponseEntity<>(eventService.createEvent(event),HttpStatus.CREATED);
+        }
+    }
 }

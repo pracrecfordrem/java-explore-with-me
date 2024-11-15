@@ -32,9 +32,9 @@ public class EventMapper {
                 user,
                 location,
                 newEventDto.getPaid(),
-                newEventDto.getParticipationLimit(),
+                newEventDto.getParticipantLimit() == null ? 0 : newEventDto.getParticipantLimit(),
                 newEventDto.getRequestModeration(),
-                "CREATED",
+                "PENDING",
                 newEventDto.getTitle()
         );
     }

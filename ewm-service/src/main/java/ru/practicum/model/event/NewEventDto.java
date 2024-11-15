@@ -10,7 +10,7 @@ public class NewEventDto {
     private String eventDate;
     private LocationDto location;
     private Boolean paid;
-    private Integer participationLimit;
+    private Integer participantLimit;
     private Boolean requestModeration;
     private String title;
 }
