@@ -1,14 +1,14 @@
 package ru.practicum.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.StatClient;
 import ru.practicum.model.category.Category;
-import ru.practicum.model.event.Event;
-import ru.practicum.model.event.EventMapper;
-import ru.practicum.model.event.NewEventDto;
+import ru.practicum.model.event.*;
 import ru.practicum.model.location.Location;
 import ru.practicum.model.location.LocationMapper;
 import ru.practicum.model.request.Request;
@@ -35,6 +35,9 @@ public class PublicController {
     private final EventService eventService;
     private final LocationRepository locationRepository;
     private final RequestService requestService;
+    private final EventMapper eventMapper;
+    private final StatClient statClient;
+    public static final String APP_NAME = "ExploreWithMe-main-service";
 
     @GetMapping("/categories")
     public List<Category> getCategories(@RequestParam(defaultValue = "0") Long from, @RequestParam(defaultValue = "10") Long size) {
@@ -49,6 +52,45 @@ public class PublicController {
         } else {
             return new ResponseEntity<>(category, HttpStatus.OK);
         }
+    }
+
+    @GetMapping("/users/{userId}/events")
+    public ResponseEntity<List<EventDto>> getUserAddedEvents(@PathVariable Long userId,
+                                                             @RequestParam Long from,
+                                                             @RequestParam Long size) {
+        return new ResponseEntity<>(eventService.getEvents(List.of(userId),
+                null,
+                null,
+                null,
+                null,
+                from,
+                size).stream().
+                map(eventMapper::toEventDto).
+                toList(),HttpStatus.OK);
+    }
+
+    @GetMapping("/events")
+    public ResponseEntity<List<EventDto>> getPublicEvents(@RequestParam(required = false) String text,
+                                                                @RequestParam(required = false) List<String> categories,
+                                                                @RequestParam(required = false) Boolean paid,
+                                                                @RequestParam(required = false) String rangeStart,
+                                                                @RequestParam(required = false) String rangeEnd,
+                                                                @RequestParam(required = false) Boolean onlyAvailable,
+                                                                @RequestParam(required = false) String sort,
+                                                                @RequestParam(required = false) Long from,
+                                                                @RequestParam(required = false) Long size,
+                                                                HttpServletRequest request) {
+        statClient.post(APP_NAME,request);
+        return new ResponseEntity<>(eventService.getPublicEvents(text,
+                categories,
+                paid,
+                rangeStart,
+                rangeEnd,
+                onlyAvailable,
+                sort,
+                from,
+                size).stream().
+                map(eventMapper::toEventDto).toList(),HttpStatus.OK);
     }
 
     @PostMapping("/users/{userId}/events")

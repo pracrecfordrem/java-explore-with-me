@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.model.event.Event;
+import ru.practicum.model.event.EventDto;
+import ru.practicum.model.event.EventMapper;
 import ru.practicum.model.request.AdminRequest;
 import ru.practicum.model.user.NewUserDto;
 import ru.practicum.model.user.User;
@@ -31,6 +33,7 @@ public class AdminController {
     private final CategoryService categoryService;
     private final UserService userService;
     private final EventService eventService;
+    private final EventMapper eventMapper;
 
     @GetMapping("/users")
     public ResponseEntity<List<User>> getUsers(@RequestParam List<Long> ids,
@@ -40,21 +43,24 @@ public class AdminController {
     }
 
     @GetMapping("/events")
-    public ResponseEntity<List<Event>> getEvents(@RequestParam(required = false) List<Long> users,
-                                                 @RequestParam(required = false) List<String> states,
-                                                 @RequestParam(required = false) List<Long> categories,
-                                                 @RequestParam(required = false) String rangeStart,
-                                                 @RequestParam(required = false) String rangeEnd,
-                                                 @RequestParam(required = false) Long from,
-                                                 @RequestParam(required = false) Long size) {
+    public ResponseEntity<List<EventDto>> getEvents(@RequestParam(required = false) List<Long> users,
+                                                    @RequestParam(required = false) List<String> states,
+                                                    @RequestParam(required = false) List<Long> categories,
+                                                    @RequestParam(required = false) String rangeStart,
+                                                    @RequestParam(required = false) String rangeEnd,
+                                                    @RequestParam(required = false) Long from,
+                                                    @RequestParam(required = false) Long size) {
         System.out.println(LocalDateTime.parse(rangeStart,CUSTOM_FORMATTER));
-        return new ResponseEntity<>(eventService.getEvents(users,
-                                                            states,
-                                                            categories,
-                                                            LocalDateTime.parse(rangeStart,CUSTOM_FORMATTER),
-                                                            LocalDateTime.parse(rangeEnd,CUSTOM_FORMATTER),
-                                                            from,
-                                                            size),HttpStatus.OK);
+        return new ResponseEntity<>(
+                eventService.getEvents(users,
+                states,
+                categories,
+                LocalDateTime.parse(rangeStart,CUSTOM_FORMATTER),
+                LocalDateTime.parse(rangeEnd,CUSTOM_FORMATTER),
+                from,
+                size).stream().
+                        map(eventMapper::toEventDto).
+                        toList(),HttpStatus.OK);
 
     }
 

@@ -2,6 +2,7 @@ package ru.practicum.service;
 
 
 import org.springframework.stereotype.Service;
+import ru.practicum.model.event.Event;
 import ru.practicum.model.user.User;
 import ru.practicum.repository.UserRepository;
 
@@ -35,4 +36,5 @@ public class UserService {
     public User getUserById(Long userId) {
         return userRepository.getUserById(userId);
     }
+
 }
