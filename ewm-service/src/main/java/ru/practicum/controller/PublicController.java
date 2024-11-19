@@ -22,6 +22,7 @@ import ru.practicum.service.RequestService;
 import ru.practicum.service.UserService;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @AllArgsConstructor
@@ -31,12 +32,10 @@ import java.util.List;
 public class PublicController {
 
     private final CategoryService categoryService;
-    private final UserService userService;
     private final EventService eventService;
-    private final LocationRepository locationRepository;
-    private final RequestService requestService;
     private final EventMapper eventMapper;
     private final StatClient statClient;
+    private static final DateTimeFormatter CUSTOM_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     public static final String APP_NAME = "ExploreWithMe-main-service";
 
     @GetMapping("/categories")
@@ -54,24 +53,10 @@ public class PublicController {
         }
     }
 
-    @GetMapping("/users/{userId}/events")
-    public ResponseEntity<List<EventDto>> getUserAddedEvents(@PathVariable Long userId,
-                                                             @RequestParam Long from,
-                                                             @RequestParam Long size) {
-        return new ResponseEntity<>(eventService.getEvents(List.of(userId),
-                null,
-                null,
-                null,
-                null,
-                from,
-                size).stream().
-                map(eventMapper::toEventDto).
-                toList(),HttpStatus.OK);
-    }
 
     @GetMapping("/events")
     public ResponseEntity<List<EventDto>> getPublicEvents(@RequestParam(required = false) String text,
-                                                                @RequestParam(required = false) List<String> categories,
+                                                                @RequestParam(required = false) List<Long> categories,
                                                                 @RequestParam(required = false) Boolean paid,
                                                                 @RequestParam(required = false) String rangeStart,
                                                                 @RequestParam(required = false) String rangeEnd,
@@ -84,8 +69,8 @@ public class PublicController {
         return new ResponseEntity<>(eventService.getPublicEvents(text,
                 categories,
                 paid,
-                rangeStart,
-                rangeEnd,
+                LocalDateTime.parse(rangeStart,CUSTOM_FORMATTER),
+                LocalDateTime.parse(rangeEnd,CUSTOM_FORMATTER),
                 onlyAvailable,
                 sort,
                 from,
@@ -93,36 +78,14 @@ public class PublicController {
                 map(eventMapper::toEventDto).toList(),HttpStatus.OK);
     }
 
-    @PostMapping("/users/{userId}/events")
-    public ResponseEntity<Event> postEvent(
-                                              @RequestBody NewEventDto newEventDto,
-                                              @PathVariable Long userId
-                                             ) {
-        Category category = categoryService.getCategoryById(newEventDto.getCategory());
-        User user = userService.getUserById(userId);
-        Location location = locationRepository.save(LocationMapper.toLocation(newEventDto.getLocation()));
-        if (category == null || user == null) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        } else {
-            return new ResponseEntity<>(eventService.createEvent(EventMapper.toEvent(newEventDto,
-                                                            category,
-                                                            user,
-                                                            location)),
-                                         HttpStatus.CREATED);
-        }
-    }
-
-    @PostMapping("/users/{userId}/requests")
-    public ResponseEntity<RequestDto> postRequest(
-            @PathVariable Long userId,
-            @RequestParam Long eventId) {
-        User user = userService.getUserById(userId);
+    @GetMapping("/events/{eventId}")
+    public ResponseEntity<EventDto> getFullEvent(@PathVariable(required = true) Long eventId, HttpServletRequest request) {
+        statClient.post(APP_NAME,request);
         Event event = eventService.getEventById(eventId);
-        if (event == null || user == null) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        if (event == null) {
+            return new ResponseEntity<>(null,HttpStatus.NOT_FOUND);
         } else {
-            Request request = new Request(null,user,event, event.getRequestModeration() ? "PENDING":"APPROVED",LocalDateTime.now());
-            return new ResponseEntity<>(RequestMapper.toRequestDto(requestService.createRequest(request)),HttpStatus.CREATED);
+            return new ResponseEntity<>(eventMapper.toEventDto(event),HttpStatus.OK);
         }
     }
 

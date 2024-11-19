@@ -4,9 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class AdminRequest {
-    private String stateAction;
+@AllArgsConstructor
+public class RequestChangeStatus {
+    private List<Long> requestIds;
+    private String status;
 }

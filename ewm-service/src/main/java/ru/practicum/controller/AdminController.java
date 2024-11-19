@@ -7,8 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.model.event.Event;
 import ru.practicum.model.event.EventDto;
+import ru.practicum.model.event.EventForUpdate;
 import ru.practicum.model.event.EventMapper;
-import ru.practicum.model.request.AdminRequest;
 import ru.practicum.model.user.NewUserDto;
 import ru.practicum.model.user.User;
 import ru.practicum.model.user.UserMapper;
@@ -99,19 +99,61 @@ public class AdminController {
     }
 
     @PatchMapping("/events/{eventId}")
-    public ResponseEntity<Event> updateEvent(@RequestBody AdminRequest adminRequest,
+    public ResponseEntity<Event> updateEvent(@RequestBody EventForUpdate eventForUpdate,
                                              @PathVariable Long eventId) {
-        System.out.println(adminRequest);
         Event event = eventService.getEventById(eventId);
         if (event == null) {
             return new ResponseEntity<>(null,HttpStatus.NOT_FOUND);
         } else if (event.getState() != null && event.getState().equals("PUBLISHED")) {
             return new ResponseEntity<>(null,HttpStatus.CONFLICT);
         } else {
-            if (adminRequest.getStateAction().equals("PUBLISH_EVENT")) {
+            if (eventForUpdate.getStateAction().equals("PUBLISH_EVENT")) {
                 event.setState("PUBLISHED");
             }
-             return new ResponseEntity<>(eventService.createEvent(event),HttpStatus.CREATED);
+            Category category = categoryService.getCategoryById(eventForUpdate.getCategory());
+            if (eventForUpdate.getAnnotation() != null) {
+                event.setAnnotation(eventForUpdate.getAnnotation());
+            }
+            if (eventForUpdate.getCategory() != null) {
+                event.setCategory(category);
+            }
+            if (eventForUpdate.getDescription() != null) {
+                event.setDescription(eventForUpdate.getDescription());
+            }
+            if (eventForUpdate.getTitle() != null) {
+                event.setTitle(eventForUpdate.getTitle());
+            }
+            if (eventForUpdate.getParticipantLimit() != null) {
+                event.setParticipantLimit(eventForUpdate.getParticipantLimit());
+            }
+            if (eventForUpdate.getEventDate() != null) {
+                event.setEventDate(LocalDateTime.parse(eventForUpdate.getEventDate(),CUSTOM_FORMATTER));
+            }
+            return new ResponseEntity<>(eventService.createEvent(event),HttpStatus.OK);
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

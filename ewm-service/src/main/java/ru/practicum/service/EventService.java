@@ -24,10 +24,10 @@ public class EventService {
     }
 
     public List<Event> getEvents(List<Long> userIds, List<String> states, List<Long> categories, LocalDateTime rangeStart, LocalDateTime rangeEnd, Long from, Long size) {
-        return eventRepository.getEvents(userIds,states,categories,rangeStart,rangeEnd);
+        return eventRepository.getEvents(userIds,states,categories,rangeStart,rangeEnd,null);
     }
 
-    public List<Event> getPublicEvents(String text, List<String> categories, Boolean paid, String rangeStart, String rangeEnd, Boolean onlyAvailable, String sort, Long from, Long size) {
-        return eventRepository.getEvents(null,null,categories,rangeStart,rangeEnd);
+    public List<Event> getPublicEvents(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, Long from, Long size) {
+        return eventRepository.getEvents(null,null,categories,rangeStart,rangeEnd,text);
     }
 }
