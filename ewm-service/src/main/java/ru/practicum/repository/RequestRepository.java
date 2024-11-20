@@ -10,7 +10,7 @@ public interface RequestRepository extends JpaRepository<Request,Long> {
 
     @Query(nativeQuery = true, value = "select count(*) " +
             "                             from event_requests er " +
-            "                            where status = 'APPROVED' " +
+            "                            where status = 'CONFIRMED' " +
             "                              and er.event_id = ?1 ")
     Long getConfirmedRequests(Long eventId);
 

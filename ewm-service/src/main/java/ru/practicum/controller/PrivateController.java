@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.model.category.Category;
 import ru.practicum.model.event.*;
@@ -34,8 +35,8 @@ public class PrivateController {
 
     @GetMapping("/users/{userId}/events")
     public ResponseEntity<List<EventDto>> getUserAddedEvents(@PathVariable Long userId,
-                                                             @RequestParam Long from,
-                                                             @RequestParam Long size) {
+                                                             @RequestParam(required = false) Long from,
+                                                             @RequestParam(required = false) Long size) {
         return new ResponseEntity<>(eventService.getEvents(List.of(userId),
                         null,
                         null,
@@ -77,7 +78,7 @@ public class PrivateController {
 
     @PostMapping("/users/{userId}/events")
     public ResponseEntity<Event> postEvent(
-            @RequestBody NewEventDto newEventDto,
+            @Validated @RequestBody NewEventDto newEventDto,
             @PathVariable Long userId
     ) {
         Category category = categoryService.getCategoryById(newEventDto.getCategory());
@@ -113,7 +114,7 @@ public class PrivateController {
     public ResponseEntity<Event> updatePersonalEvent(
             @PathVariable Long userId,
             @PathVariable Long eventId,
-            @RequestBody EventForUpdate eventForUpdate) {
+            @Validated @RequestBody EventForUpdate eventForUpdate) {
         Event event = eventService.getEventById(eventId);
         if (eventForUpdate.getStateAction().equals("CANCEL_REVIEW")) {
             event.setState("CANCELED");

@@ -1,5 +1,6 @@
 package ru.practicum.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -49,9 +50,9 @@ public class AdminController {
                                                     @RequestParam(required = false) String rangeStart,
                                                     @RequestParam(required = false) String rangeEnd,
                                                     @RequestParam(required = false) Long from,
-                                                    @RequestParam(required = false) Long size) {
-        System.out.println(LocalDateTime.parse(rangeStart,CUSTOM_FORMATTER));
-        return new ResponseEntity<>(
+                                                    @RequestParam(required = false) Long size,
+                                                    HttpServletRequest request) {
+              return new ResponseEntity<>(
                 eventService.getEvents(users,
                 states,
                 categories,

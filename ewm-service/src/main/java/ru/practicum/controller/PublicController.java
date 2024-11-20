@@ -9,17 +9,10 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.StatClient;
 import ru.practicum.model.category.Category;
 import ru.practicum.model.event.*;
-import ru.practicum.model.location.Location;
-import ru.practicum.model.location.LocationMapper;
-import ru.practicum.model.request.Request;
-import ru.practicum.model.request.RequestDto;
-import ru.practicum.model.request.RequestMapper;
-import ru.practicum.model.user.User;
-import ru.practicum.repository.LocationRepository;
+import ru.practicum.model.exception.Exception;
 import ru.practicum.service.CategoryService;
 import ru.practicum.service.EventService;
-import ru.practicum.service.RequestService;
-import ru.practicum.service.UserService;
+
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -66,11 +59,13 @@ public class PublicController {
                                                                 @RequestParam(required = false) Long size,
                                                                 HttpServletRequest request) {
         statClient.post(APP_NAME,request);
+        LocalDateTime rangeStartDt = rangeStart != null ? LocalDateTime.parse(rangeStart,CUSTOM_FORMATTER) : null;
+        LocalDateTime rangeEndDt = rangeStart != null ? LocalDateTime.parse(rangeEnd,CUSTOM_FORMATTER) : null;
         return new ResponseEntity<>(eventService.getPublicEvents(text,
                 categories,
                 paid,
-                LocalDateTime.parse(rangeStart,CUSTOM_FORMATTER),
-                LocalDateTime.parse(rangeEnd,CUSTOM_FORMATTER),
+                rangeStartDt,
+                rangeEndDt,
                 onlyAvailable,
                 sort,
                 from,
@@ -79,11 +74,14 @@ public class PublicController {
     }
 
     @GetMapping("/events/{eventId}")
-    public ResponseEntity<EventDto> getFullEvent(@PathVariable(required = true) Long eventId, HttpServletRequest request) {
+    public ResponseEntity<Object> getFullEvent(@PathVariable(required = true) Long eventId, HttpServletRequest request) {
         statClient.post(APP_NAME,request);
         Event event = eventService.getEventById(eventId);
-        if (event == null) {
-            return new ResponseEntity<>(null,HttpStatus.NOT_FOUND);
+        if (event == null || !event.getState().equals("PUBLISHED")) {
+            return new ResponseEntity<>(new Exception("NOT_FOUND",
+                    "The required object was not found.",
+                    "Event with id=" + eventId + " was not found",
+                    LocalDateTime.now()),HttpStatus.NOT_FOUND);
         } else {
             return new ResponseEntity<>(eventMapper.toEventDto(event),HttpStatus.OK);
         }
