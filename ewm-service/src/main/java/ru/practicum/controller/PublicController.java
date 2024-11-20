@@ -1,6 +1,7 @@
 package ru.practicum.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -48,7 +49,7 @@ public class PublicController {
 
 
     @GetMapping("/events")
-    public ResponseEntity<List<EventDto>> getPublicEvents(@RequestParam(required = false) String text,
+    public ResponseEntity<List<EventDto>> getPublicEvents(@Pattern(regexp = "^[^0-9]*$", message = "Строка не должна содержать цифры") @RequestParam(required = false) String text,
                                                                 @RequestParam(required = false) List<Long> categories,
                                                                 @RequestParam(required = false) Boolean paid,
                                                                 @RequestParam(required = false) String rangeStart,
@@ -70,7 +71,7 @@ public class PublicController {
                 sort,
                 from,
                 size).stream().
-                map(eventMapper::toEventDto).toList(),HttpStatus.OK);
+                map(event -> eventMapper.toEventDto(event,statClient)).toList(),HttpStatus.OK);
     }
 
     @GetMapping("/events/{eventId}")
@@ -83,7 +84,7 @@ public class PublicController {
                     "Event with id=" + eventId + " was not found",
                     LocalDateTime.now()),HttpStatus.NOT_FOUND);
         } else {
-            return new ResponseEntity<>(eventMapper.toEventDto(event),HttpStatus.OK);
+            return new ResponseEntity<>(eventMapper.toEventDto(event,statClient),HttpStatus.OK);
         }
     }
 

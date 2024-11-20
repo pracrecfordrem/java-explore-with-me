@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.StatClient;
 import ru.practicum.model.category.Category;
 import ru.practicum.model.event.*;
 import ru.practicum.model.location.Location;
@@ -32,6 +33,7 @@ public class PrivateController {
     private final CategoryService categoryService;
     private final LocationRepository locationRepository;
     private final RequestService requestService;
+    private final StatClient statClient;
 
     @GetMapping("/users/{userId}/events")
     public ResponseEntity<List<EventDto>> getUserAddedEvents(@PathVariable Long userId,
@@ -44,7 +46,7 @@ public class PrivateController {
                         null,
                         from,
                         size).stream().
-                map(eventMapper::toEventDto).
+                map(event -> eventMapper.toEventDto(event,statClient)).
                 toList(), HttpStatus.OK);
     }
 
@@ -55,7 +57,7 @@ public class PrivateController {
         if (event == null) {
             return new ResponseEntity<>(null,HttpStatus.NOT_FOUND);
         } else {
-            return new ResponseEntity<>(eventMapper.toEventDto(event),HttpStatus.OK);
+            return new ResponseEntity<>(eventMapper.toEventDto(event,statClient),HttpStatus.OK);
         }
     }
 

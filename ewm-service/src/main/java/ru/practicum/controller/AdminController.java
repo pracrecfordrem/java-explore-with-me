@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.StatClient;
 import ru.practicum.model.event.Event;
 import ru.practicum.model.event.EventDto;
 import ru.practicum.model.event.EventForUpdate;
@@ -35,6 +36,7 @@ public class AdminController {
     private final UserService userService;
     private final EventService eventService;
     private final EventMapper eventMapper;
+    private final StatClient statClient;
 
     @GetMapping("/users")
     public ResponseEntity<List<User>> getUsers(@RequestParam List<Long> ids,
@@ -60,7 +62,7 @@ public class AdminController {
                 LocalDateTime.parse(rangeEnd,CUSTOM_FORMATTER),
                 from,
                 size).stream().
-                        map(eventMapper::toEventDto).
+                        map(event -> eventMapper.toEventDto(event,statClient)).
                         toList(),HttpStatus.OK);
 
     }

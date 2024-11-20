@@ -31,10 +31,4 @@ public interface EventRepository extends JpaRepository<Event,Long> {
                           @Param("rangeEnd") LocalDateTime rangeEnd,
                           @Param("text") String text);
 
-
-    @Query(nativeQuery = true, value = "select count(*) " +
-            "                             from event_views ev " +
-            "                            where ev.event_id = ?1 " )
-    Long getViews(Long eventId);
-
 }

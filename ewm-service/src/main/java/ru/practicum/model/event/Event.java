@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import ru.practicum.model.category.Category;
 import ru.practicum.model.location.Location;
 import ru.practicum.model.user.User;
-import ru.practicum.model.view.View;
 
 import java.time.LocalDateTime;
 

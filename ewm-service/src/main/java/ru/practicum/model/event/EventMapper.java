@@ -1,16 +1,21 @@
 package ru.practicum.model.event;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import ru.practicum.model.category.Category;
 import ru.practicum.model.location.Location;
 import ru.practicum.model.user.User;
 import ru.practicum.repository.EventRepository;
 import ru.practicum.repository.RequestRepository;
-
+import ru.practicum.StatClient;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
 
 @Component
 @AllArgsConstructor
@@ -43,9 +48,9 @@ public class EventMapper {
         );
     }
 
-    public EventDto toEventDto(Event event) {
-        Long views = eventRepository.getViews(event.getId());
+    public EventDto toEventDto(Event event, StatClient statClient) {
         Long confirmedRequests = requestRepository.getConfirmedRequests(event.getId());
+        getViews(statClient,event.getId());
         return new EventDto(
                 event.getId(),
                 event.getAnnotation(),
@@ -61,8 +66,21 @@ public class EventMapper {
                 event.getRequestModeration(),
                 event.getState(),
                 event.getTitle(),
-                views,
+                0L,
                 confirmedRequests
         );
+    }
+
+    private static long getViews(StatClient statClient, Long eventId) {
+
+        ResponseEntity<Object> response = statClient.get(LocalDateTime.of(1900,1,1,0,0,0).toString(),
+                                                         LocalDateTime.of(4999,1,1,0,0,0).toString(),
+                                                         List.of("/events/"+eventId),
+                                                         true);
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<Map<String, Object>> statsResponseList = objectMapper.convertValue(response.getBody(), new TypeReference<>() {
+        });
+        System.out.println(statsResponseList);
+        return 0L;
     }
 }
