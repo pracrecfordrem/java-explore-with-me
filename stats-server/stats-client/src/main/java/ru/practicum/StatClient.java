@@ -29,18 +29,17 @@ public class StatClient extends BaseClient {
         );
     }
 
-    public ResponseEntity<Object> get(String from, String to, List<String> uris, Boolean isUnique) {
+    public ResponseEntity<Object> get(String start, String end, String[] uris, Boolean isUnique) {
         Map<String, Object> parameters = Map.of(
-                "from", from,
-                "to", to,
+                "start", start,
+                "end", end,
                 "uris", uris,
                 "isUnique",isUnique
         );
-        return get("/stats?from={from}&to={to}&uris={uris}$isUnique={isUnique}", parameters);
+        return get("/stats?start={start}&end={end}&uris={uris}&isUnique={isUnique}", parameters);
     }
 
     public ResponseEntity<Object> post(String appName, HttpServletRequest request) {
-        System.out.println("HttpServletRequest " + request);
         StatsRequestDto statsRequestDto = new StatsRequestDto(appName,
                 request.getRequestURI(),
                 request.getRemoteAddr(),

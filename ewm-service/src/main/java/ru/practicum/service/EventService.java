@@ -23,11 +23,11 @@ public class EventService {
         return eventRepository.getEventById(eventId);
     }
 
-    public List<Event> getEvents(List<Long> userIds, List<String> states, List<Long> categories, LocalDateTime rangeStart, LocalDateTime rangeEnd, Long from, Long size) {
+    public List<Event> getEvents(List<Long> userIds, List<String> states, List<Long> categories, LocalDateTime rangeStart, LocalDateTime rangeEnd) {
         return eventRepository.getEvents(userIds,states,categories,rangeStart,rangeEnd,null);
     }
 
-    public List<Event> getPublicEvents(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, Long from, Long size) {
+    public List<Event> getPublicEvents(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, String sort) {
         return eventRepository.getEvents(null,null,categories,rangeStart,rangeEnd,text);
     }
 }

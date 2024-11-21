@@ -1,5 +1,6 @@
 package ru.practicum.model.event;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,6 +28,6 @@ public class EventDto {
     private Boolean requestModeration;
     private String state;
     private String title;
-    private Long views;
+    private Integer views;
     private Long confirmedRequests;
 }

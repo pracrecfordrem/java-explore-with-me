@@ -35,14 +35,14 @@ public class EventMapper {
                 newEventDto.getAnnotation(),
                 category,
                 newEventDto.getDescription(),
-                LocalDateTime.parse(newEventDto.getEventDate(), CUSTOM_FORMATTER),
+                newEventDto.getEventDate(),
                 LocalDateTime.now(),
                 null,
                 user,
                 location,
-                newEventDto.getPaid(),
+                newEventDto.getPaid() != null && newEventDto.getPaid(),
                 newEventDto.getParticipantLimit() == null ? 0 : newEventDto.getParticipantLimit(),
-                newEventDto.getRequestModeration(),
+                newEventDto.getRequestModeration() == null || newEventDto.getRequestModeration(),
                 "PENDING",
                 newEventDto.getTitle()
         );
@@ -66,21 +66,24 @@ public class EventMapper {
                 event.getRequestModeration(),
                 event.getState(),
                 event.getTitle(),
-                0L,
+                getViews(statClient,event.getId()),
                 confirmedRequests
         );
     }
 
-    private static long getViews(StatClient statClient, Long eventId) {
-
-        ResponseEntity<Object> response = statClient.get(LocalDateTime.of(1900,1,1,0,0,0).toString(),
-                                                         LocalDateTime.of(4999,1,1,0,0,0).toString(),
-                                                         List.of("/events/"+eventId),
+    private static Integer getViews(StatClient statClient, Long eventId) {
+        String [] strings = {"/events/" + eventId};
+        ResponseEntity<Object> response = statClient.get(LocalDateTime.of(1900,1,1,0,0,0).format(CUSTOM_FORMATTER),
+                                                         LocalDateTime.of(4999,1,1,0,0,0).format(CUSTOM_FORMATTER),
+                                                         strings,
                                                          true);
         ObjectMapper objectMapper = new ObjectMapper();
         List<Map<String, Object>> statsResponseList = objectMapper.convertValue(response.getBody(), new TypeReference<>() {
         });
-        System.out.println(statsResponseList);
-        return 0L;
+         if (!statsResponseList.isEmpty()) {
+             return (Integer) statsResponseList.get(0).get("hits");
+         } else {
+             return 0;
+         }
     }
 }

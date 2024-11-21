@@ -35,13 +35,14 @@ public class RequestService {
             requestRepository.save(request);
         }
         List<Request> requestList = requestRepository.getRequestsByEventId(eventId);
+        System.out.println("reqqqq" + " " + requestList);
         RequestUserInfo requestUserInfo = new RequestUserInfo();
         List<RequestDto> confirmedRequests = new ArrayList<>();
         List<RequestDto> rejectedRequests = new ArrayList<>();
         for (Request request: requestList) {
             if (request.getStatus().equals("CONFIRMED")) {
                 confirmedRequests.add(RequestMapper.toRequestDto(request));
-            } else if (request.getStatus().equals("CANCELED")) {
+            } else if (request.getStatus().equals("REJECTED")) {
                 rejectedRequests.add(RequestMapper.toRequestDto(request));
             }
         }

@@ -20,6 +20,7 @@ import ru.practicum.service.RequestService;
 import ru.practicum.service.UserService;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @AllArgsConstructor
@@ -37,17 +38,23 @@ public class PrivateController {
 
     @GetMapping("/users/{userId}/events")
     public ResponseEntity<List<EventDto>> getUserAddedEvents(@PathVariable Long userId,
-                                                             @RequestParam(required = false) Long from,
-                                                             @RequestParam(required = false) Long size) {
-        return new ResponseEntity<>(eventService.getEvents(List.of(userId),
+                                                             @RequestParam(required = false, defaultValue = "0") Integer from,
+                                                             @RequestParam(required = false, defaultValue = "10") Integer size) {
+        List<EventDto> eventDtoList = eventService.getEvents(List.of(userId),
                         null,
                         null,
                         null,
-                        null,
-                        from,
-                        size).stream().
+                        null).stream().
                 map(event -> eventMapper.toEventDto(event,statClient)).
-                toList(), HttpStatus.OK);
+                toList();
+        if (from > eventDtoList.size()) {
+            eventDtoList = new ArrayList<>();
+        } else if (size > eventDtoList.size()) {
+            eventDtoList = eventDtoList.subList(from,eventDtoList.size());
+        } else {
+            eventDtoList = eventDtoList.subList(from,size);
+        }
+        return new ResponseEntity<>(eventDtoList, HttpStatus.OK);
     }
 
     @GetMapping("/users/{userId}/events/{eventId}")
@@ -106,7 +113,10 @@ public class PrivateController {
         if (event == null || user == null) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         } else {
-            Request request = new Request(null,user,event, event.getRequestModeration() ? "PENDING":"CONFIRMED", LocalDateTime.now());
+            Request request = new Request(null,user,event,
+                    eventMapper.toEventDto(event,statClient).getConfirmedRequests() - event.getParticipantLimit() > 0
+                            || event.getParticipantLimit() == 0 ?
+                            "CONFIRMED":"PENDING", LocalDateTime.now());
 
             return new ResponseEntity<>(RequestMapper.toRequestDto(requestService.createRequest(request)),HttpStatus.CREATED);
         }
@@ -118,7 +128,7 @@ public class PrivateController {
             @PathVariable Long eventId,
             @Validated @RequestBody EventForUpdate eventForUpdate) {
         Event event = eventService.getEventById(eventId);
-        if (eventForUpdate.getStateAction().equals("CANCEL_REVIEW")) {
+        if (eventForUpdate.getStateAction() != null && eventForUpdate.getStateAction().equals("CANCEL_REVIEW")) {
             event.setState("CANCELED");
         }
         return new ResponseEntity<>(eventService.createEvent(event),HttpStatus.OK);

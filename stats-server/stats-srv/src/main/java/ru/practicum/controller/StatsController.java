@@ -1,5 +1,6 @@
 package ru.practicum.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.StatsRequestDto;
@@ -26,8 +27,13 @@ public class StatsController {
     public List<Hit> get(@RequestParam String start,
                          @RequestParam String end,
                          @RequestParam(required = false) List<String> uris,
-                         @RequestParam(required = false, defaultValue = "false") Boolean unique
+                         @RequestParam(required = false, defaultValue = "false") Boolean isUnique,
+                         HttpServletRequest request
                            ) {
-        return statsService.get(LocalDateTime.parse(start,CUSTOM_FORMATTER),LocalDateTime.parse(end,CUSTOM_FORMATTER),uris,unique);
+        System.out.println(request.getRequestURI());
+        for (String key:  request.getParameterMap().keySet()) {
+            System.out.println(key + " " + request.getParameter(key));
+        }
+        return statsService.get(LocalDateTime.parse(start,CUSTOM_FORMATTER),LocalDateTime.parse(end,CUSTOM_FORMATTER),uris,isUnique);
     }
 }

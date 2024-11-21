@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.StatClient;
 import ru.practicum.model.event.Event;
@@ -23,6 +24,7 @@ import ru.practicum.service.UserService;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @AllArgsConstructor
@@ -51,19 +53,25 @@ public class AdminController {
                                                     @RequestParam(required = false) List<Long> categories,
                                                     @RequestParam(required = false) String rangeStart,
                                                     @RequestParam(required = false) String rangeEnd,
-                                                    @RequestParam(required = false) Long from,
-                                                    @RequestParam(required = false) Long size,
+                                                    @RequestParam(required = false, defaultValue = "0") Integer from,
+                                                    @RequestParam(required = false, defaultValue = "10") Integer size,
                                                     HttpServletRequest request) {
-              return new ResponseEntity<>(
-                eventService.getEvents(users,
-                states,
-                categories,
-                LocalDateTime.parse(rangeStart,CUSTOM_FORMATTER),
-                LocalDateTime.parse(rangeEnd,CUSTOM_FORMATTER),
-                from,
-                size).stream().
-                        map(event -> eventMapper.toEventDto(event,statClient)).
-                        toList(),HttpStatus.OK);
+        List<EventDto> eventDtoList = eventService.getEvents(users,
+                        states,
+                        categories,
+                        rangeStart == null ? null : LocalDateTime.parse(rangeStart,CUSTOM_FORMATTER),
+                        rangeEnd == null ? null : LocalDateTime.parse(rangeEnd,CUSTOM_FORMATTER)
+                ).stream().
+                map(event -> eventMapper.toEventDto(event,statClient)).
+                toList();
+        if (from > eventDtoList.size()) {
+            eventDtoList = new ArrayList<>();
+        } else if (size > eventDtoList.size()) {
+            eventDtoList = eventDtoList.subList(from,eventDtoList.size());
+        } else {
+            eventDtoList = eventDtoList.subList(from,size);
+        }
+        return new ResponseEntity<>(eventDtoList,HttpStatus.OK);
 
     }
 
@@ -102,7 +110,7 @@ public class AdminController {
     }
 
     @PatchMapping("/events/{eventId}")
-    public ResponseEntity<Event> updateEvent(@RequestBody EventForUpdate eventForUpdate,
+    public ResponseEntity<Event> updateEvent(@Validated @RequestBody EventForUpdate eventForUpdate,
                                              @PathVariable Long eventId) {
         Event event = eventService.getEventById(eventId);
         if (event == null) {
@@ -110,7 +118,7 @@ public class AdminController {
         } else if (event.getState() != null && event.getState().equals("PUBLISHED")) {
             return new ResponseEntity<>(null,HttpStatus.CONFLICT);
         } else {
-            if (eventForUpdate.getStateAction().equals("PUBLISH_EVENT")) {
+            if (eventForUpdate.getStateAction() != null && eventForUpdate.getStateAction().equals("PUBLISH_EVENT")) {
                 event.setState("PUBLISHED");
             }
             Category category = categoryService.getCategoryById(eventForUpdate.getCategory());
@@ -130,7 +138,10 @@ public class AdminController {
                 event.setParticipantLimit(eventForUpdate.getParticipantLimit());
             }
             if (eventForUpdate.getEventDate() != null) {
-                event.setEventDate(LocalDateTime.parse(eventForUpdate.getEventDate(),CUSTOM_FORMATTER));
+                event.setEventDate(eventForUpdate.getEventDate());
+            }
+            if (eventForUpdate.getPaid() != null) {
+                event.setPaid(eventForUpdate.getPaid());
             }
             return new ResponseEntity<>(eventService.createEvent(event),HttpStatus.OK);
         }

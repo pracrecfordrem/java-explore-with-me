@@ -17,6 +17,7 @@ import ru.practicum.service.EventService;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @AllArgsConstructor
@@ -56,22 +57,28 @@ public class PublicController {
                                                                 @RequestParam(required = false) String rangeEnd,
                                                                 @RequestParam(required = false) Boolean onlyAvailable,
                                                                 @RequestParam(required = false) String sort,
-                                                                @RequestParam(required = false) Long from,
-                                                                @RequestParam(required = false) Long size,
+                                                                @RequestParam(required = false, defaultValue = "0") Integer from,
+                                                                @RequestParam(required = false, defaultValue = "10") Integer size,
                                                                 HttpServletRequest request) {
         statClient.post(APP_NAME,request);
         LocalDateTime rangeStartDt = rangeStart != null ? LocalDateTime.parse(rangeStart,CUSTOM_FORMATTER) : null;
         LocalDateTime rangeEndDt = rangeStart != null ? LocalDateTime.parse(rangeEnd,CUSTOM_FORMATTER) : null;
-        return new ResponseEntity<>(eventService.getPublicEvents(text,
-                categories,
-                paid,
-                rangeStartDt,
-                rangeEndDt,
-                onlyAvailable,
-                sort,
-                from,
-                size).stream().
-                map(event -> eventMapper.toEventDto(event,statClient)).toList(),HttpStatus.OK);
+        List<EventDto> eventDtoList = eventService.getPublicEvents(text,
+                        categories,
+                        paid,
+                        rangeStartDt,
+                        rangeEndDt,
+                        onlyAvailable,
+                        sort).stream().
+                map(event -> eventMapper.toEventDto(event,statClient)).toList();
+        if (from > eventDtoList.size()) {
+            eventDtoList = new ArrayList<>();
+        } else if (size > eventDtoList.size()) {
+            eventDtoList = eventDtoList.subList(from,eventDtoList.size());
+        } else {
+            eventDtoList = eventDtoList.subList(from,size);
+        }
+        return new ResponseEntity<>(eventDtoList,HttpStatus.OK);
     }
 
     @GetMapping("/events/{eventId}")
