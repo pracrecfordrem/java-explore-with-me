@@ -10,11 +10,13 @@ import java.util.List;
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     @Query(nativeQuery = true,
-            value = "select *" +
+            value = "select * " +
                      " from categories" +
                     " limit :size" +
                    " offset :from")
     List<Category> getCategories(@Param("from")Long from, @Param("size")Long size);
 
     Category getCategoryById(Long id);
+
+    Category getCategoryByName(String name);
 }

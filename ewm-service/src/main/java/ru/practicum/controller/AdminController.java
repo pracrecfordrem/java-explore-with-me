@@ -1,6 +1,7 @@
 package ru.practicum.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -8,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.StatClient;
+import ru.practicum.model.compilation.Compilation;
+import ru.practicum.model.compilation.NewCompilationDto;
 import ru.practicum.model.event.Event;
 import ru.practicum.model.event.EventDto;
 import ru.practicum.model.event.EventForUpdate;
@@ -19,9 +22,10 @@ import ru.practicum.service.CategoryService;
 import ru.practicum.model.category.Category;
 import ru.practicum.model.category.CategoryMappper;
 import ru.practicum.model.category.NewCategoryDto;
+import ru.practicum.service.CompilationService;
 import ru.practicum.service.EventService;
 import ru.practicum.service.UserService;
-
+import ru.practicum.model.exception.Exception;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -37,11 +41,14 @@ public class AdminController {
     private final CategoryService categoryService;
     private final UserService userService;
     private final EventService eventService;
+    private final CompilationService compilationService;
+
+
     private final EventMapper eventMapper;
     private final StatClient statClient;
 
     @GetMapping("/users")
-    public ResponseEntity<List<User>> getUsers(@RequestParam List<Long> ids,
+    public ResponseEntity<List<User>> getUsers(@RequestParam(required = false) List<Long> ids,
                                                @RequestParam(required = false, defaultValue = "0") Integer from,
                                                @RequestParam(required = false, defaultValue = "10") Integer size) {
         return new ResponseEntity<>(userService.getUsers(ids, from, size),HttpStatus.OK);
@@ -76,17 +83,38 @@ public class AdminController {
     }
 
     @PostMapping("/categories")
-    public ResponseEntity<Category> createCategory(@RequestBody NewCategoryDto newCategoryDto) {
+    public ResponseEntity<Object> createCategory(@Valid @RequestBody NewCategoryDto newCategoryDto) {
+        if (categoryService.findByName(newCategoryDto.getName()) != null) {
+            return new ResponseEntity<>(new Exception("CONFLICT", "Integrity constraint has been violated.","could not execute statement; SQL [n/a]; constraint [uq_category_name]; nested exception is org.hibernate.exception.ConstraintViolationException: could not execute statement",LocalDateTime.now()),HttpStatus.CONFLICT);
+        }
         return new ResponseEntity<>(categoryService.createCategory(CategoryMappper.toCategory(newCategoryDto)), HttpStatus.CREATED);
     }
 
     @PostMapping("/users")
-    public ResponseEntity<User> createUser(@RequestBody NewUserDto newUserDto) {
+    public ResponseEntity<Object> createUser(@Validated @RequestBody NewUserDto newUserDto) {
+        if (userService.findByEmail(newUserDto.getEmail()) != null) {
+            return new ResponseEntity<>(new Exception("CONFLICT", "Integrity constraint has been violated.","could not execute statement; SQL [n/a]; constraint [uq_category_name]; " +
+                    "nested exception is org.hibernate.exception.ConstraintViolationException: could not execute statement",
+                    LocalDateTime.now()),HttpStatus.CONFLICT);
+        }
         return new ResponseEntity<>(userService.createUser(UserMapper.toUser(newUserDto)), HttpStatus.CREATED);
     }
 
+    @PostMapping("/compilations")
+    public ResponseEntity<Compilation> createCompilation(@Validated @RequestBody NewCompilationDto newCompilationDto) {
+        return new ResponseEntity<>(compilationService.createCompilation(newCompilationDto),HttpStatus.CREATED);
+    }
+
     @DeleteMapping("/categories/{catId}")
-    public ResponseEntity<Category> deleteCategory(@PathVariable Long catId) {
+    public ResponseEntity<Object> deleteCategory(@PathVariable Long catId) {
+        List<Event> events = eventService.getEventsByCategoryId(catId);
+        Category category = categoryService.getCategoryById(catId);
+        if (category == null) {
+            return new ResponseEntity<>(new Exception("NOT_FOUND","The required object was not found.","Category with id=" + catId + " was not found",LocalDateTime.now()),HttpStatus.NOT_FOUND);
+        }
+        if (events != null && !events.isEmpty()) {
+            return new ResponseEntity<>(new Exception("CONFLICT","For the requested operation the conditions are not met.","The category is not empty",LocalDateTime.now()),HttpStatus.CONFLICT);
+        }
         categoryService.deleteCategory(catId);
         return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
     }
@@ -99,10 +127,14 @@ public class AdminController {
     }
 
     @PatchMapping("/categories/{catId}")
-    public ResponseEntity<Category> updateCategory(@RequestBody NewCategoryDto newCategoryDto, @PathVariable Long catId) {
+    public ResponseEntity<Object> updateCategory(@Validated @RequestBody NewCategoryDto newCategoryDto, @PathVariable Long catId) {
         Category category = categoryService.getCategoryById(catId);
         if (category == null) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        } else if (categoryService.findByName(newCategoryDto.getName()) != null) {
+            return new ResponseEntity<>(new Exception("CONFLICT", "Integrity constraint has been violated.","could not execute statement; SQL [n/a];" +
+                    " constraint [uq_category_name]; nested exception is org.hibernate.exception.ConstraintViolationException: could not execute statement",
+                    LocalDateTime.now()),HttpStatus.CONFLICT);
         } else {
             category.setName(newCategoryDto.getName());
             return new ResponseEntity<>(categoryService.createCategory(category),HttpStatus.OK);
@@ -110,16 +142,21 @@ public class AdminController {
     }
 
     @PatchMapping("/events/{eventId}")
-    public ResponseEntity<Event> updateEvent(@Validated @RequestBody EventForUpdate eventForUpdate,
+    public ResponseEntity<Object> updateEvent(@Validated @RequestBody EventForUpdate eventForUpdate,
                                              @PathVariable Long eventId) {
         Event event = eventService.getEventById(eventId);
         if (event == null) {
             return new ResponseEntity<>(null,HttpStatus.NOT_FOUND);
-        } else if (event.getState() != null && event.getState().equals("PUBLISHED")) {
-            return new ResponseEntity<>(null,HttpStatus.CONFLICT);
+        } else if (event.getState() != null && (event.getState().equals("PUBLISHED")) || event.getState().equals("CANCELED")) {
+            return new ResponseEntity<>(new Exception("CONFLICT", "Integrity constraint has been violated.","could not execute statement; SQL [n/a];" +
+                    " constraint [uq_category_name]; nested exception is org.hibernate.exception.ConstraintViolationException: could not execute statement",
+                    LocalDateTime.now()),HttpStatus.CONFLICT);
         } else {
             if (eventForUpdate.getStateAction() != null && eventForUpdate.getStateAction().equals("PUBLISH_EVENT")) {
                 event.setState("PUBLISHED");
+            }
+            if (eventForUpdate.getStateAction() != null && eventForUpdate.getStateAction().equals("REJECT_EVENT")) {
+                event.setState("CANCELED");
             }
             Category category = categoryService.getCategoryById(eventForUpdate.getCategory());
             if (eventForUpdate.getAnnotation() != null) {
@@ -146,6 +183,18 @@ public class AdminController {
             return new ResponseEntity<>(eventService.createEvent(event),HttpStatus.OK);
         }
     }
+
+    @PatchMapping("/compilations/{compId}")
+    public ResponseEntity<Object> updateCompilation(@Validated @RequestBody NewCompilationDto compilationDto,
+                                                         @PathVariable Long compId) {
+        Compilation compilation = compilationService.getCompilationById(compId);
+        if (compilation == null) {
+            return new ResponseEntity<>(new Exception("NOT_FOUND", "The required object was not found.", "Compilation with id= " + compId + " was not found",LocalDateTime.now()),HttpStatus.NOT_FOUND);
+        } else {
+            return new ResponseEntity<>(compilationService.createCompilation(compilationDto),HttpStatus.OK);
+        }
+    }
+
 }
 
 

@@ -30,4 +30,8 @@ public class EventService {
     public List<Event> getPublicEvents(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, String sort) {
         return eventRepository.getEvents(null,null,categories,rangeStart,rangeEnd,text);
     }
+
+    public List<Event> getEventsByCategoryId(Long catId) {
+        return eventRepository.getEventsByCategory_id(catId);
+    }
 }

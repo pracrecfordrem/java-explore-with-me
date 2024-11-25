@@ -31,4 +31,6 @@ public interface EventRepository extends JpaRepository<Event,Long> {
                           @Param("rangeEnd") LocalDateTime rangeEnd,
                           @Param("text") String text);
 
+    List<Event> getEventsByCategory_id(Long catId);
+
 }

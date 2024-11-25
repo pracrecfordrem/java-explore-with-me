@@ -9,9 +9,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.StatClient;
 import ru.practicum.model.category.Category;
+import ru.practicum.model.compilation.Compilation;
 import ru.practicum.model.event.*;
 import ru.practicum.model.exception.Exception;
 import ru.practicum.service.CategoryService;
+import ru.practicum.service.CompilationService;
 import ru.practicum.service.EventService;
 
 
@@ -27,6 +29,7 @@ import java.util.List;
 public class PublicController {
 
     private final CategoryService categoryService;
+    private final CompilationService compilationService;
     private final EventService eventService;
     private final EventMapper eventMapper;
     private final StatClient statClient;
@@ -93,6 +96,21 @@ public class PublicController {
         } else {
             return new ResponseEntity<>(eventMapper.toEventDto(event,statClient),HttpStatus.OK);
         }
+    }
+
+    @GetMapping("/compilations")
+    public ResponseEntity<List<Compilation>> getCompilations(@RequestParam(required = false) Boolean pinned,
+                                                             @RequestParam(required = false, defaultValue = "0") Integer from,
+                                                             @RequestParam(required = false, defaultValue = "10") Integer size) {
+        List<Compilation> compilations = compilationService.getCompilations(pinned,from,size);
+        if (from > compilations.size()) {
+            compilations = new ArrayList<>();
+        } else if (size > compilations.size()) {
+            compilations = compilations.subList(from,compilations.size());
+        } else {
+            compilations = compilations.subList(from,size);
+        }
+        return new ResponseEntity<>(compilations,HttpStatus.OK);
     }
 
 }
