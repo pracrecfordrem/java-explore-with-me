@@ -12,6 +12,7 @@ import java.util.List;
 @Service
 public class RequestService {
     private final RequestRepository requestRepository;
+
     public Request createRequest(Request request) {
         return requestRepository.save(request);
     }

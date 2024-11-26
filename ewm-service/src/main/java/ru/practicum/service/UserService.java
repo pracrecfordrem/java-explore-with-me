@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import ru.practicum.model.user.User;
 import ru.practicum.repository.UserRepository;
 
-
 import java.util.List;
 
 @AllArgsConstructor

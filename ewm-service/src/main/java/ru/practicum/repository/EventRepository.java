@@ -3,7 +3,6 @@ package ru.practicum.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import ru.practicum.model.category.Category;
 import ru.practicum.model.event.Event;
 
 import java.time.LocalDateTime;

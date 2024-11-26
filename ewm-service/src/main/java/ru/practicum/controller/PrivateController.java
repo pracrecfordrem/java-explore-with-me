@@ -45,8 +45,9 @@ public class PrivateController {
                         null,
                         null,
                         null,
-                        null).stream().
-                map(event -> eventMapper.toEventDto(event,statClient)).
+                        null)
+                        .stream()
+                        .map(event -> eventMapper.toEventDto(event,statClient)).
                 toList();
         if (from > eventDtoList.size()) {
             eventDtoList = new ArrayList<>();
@@ -125,7 +126,7 @@ public class PrivateController {
                     ((event.getParticipantLimit() - eventMapper.toEventDto(event,statClient).getConfirmedRequests() > 0
                             || event.getParticipantLimit() == 0) && !event.getRequestModeration())
                     || event.getParticipantLimit() == 0 ?
-                            "CONFIRMED":"PENDING", LocalDateTime.now());
+                            "CONFIRMED" : "PENDING", LocalDateTime.now());
 
             return new ResponseEntity<>(RequestMapper.toRequestDto(requestService.createRequest(request)),HttpStatus.CREATED);
         }
@@ -160,7 +161,7 @@ public class PrivateController {
     }
 
     @PatchMapping("/users/{userId}/events/{eventId}/requests")
-    public ResponseEntity<Object> answerRequests (
+    public ResponseEntity<Object> answerRequests(
             @PathVariable Long userId,
             @PathVariable Long eventId,
             @RequestBody RequestChangeStatus requestChangeStatus

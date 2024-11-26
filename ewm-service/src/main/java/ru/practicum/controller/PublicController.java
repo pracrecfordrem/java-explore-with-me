@@ -10,12 +10,13 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.StatClient;
 import ru.practicum.model.category.Category;
 import ru.practicum.model.compilation.Compilation;
-import ru.practicum.model.event.*;
+import ru.practicum.model.event.Event;
+import ru.practicum.model.event.EventDto;
+import ru.practicum.model.event.EventMapper;
 import ru.practicum.model.exception.Exception;
 import ru.practicum.service.CategoryService;
 import ru.practicum.service.CompilationService;
 import ru.practicum.service.EventService;
-
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

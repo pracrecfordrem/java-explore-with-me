@@ -5,12 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import ru.practicum.StatClient;
 import ru.practicum.model.category.Category;
 import ru.practicum.model.location.Location;
 import ru.practicum.model.user.User;
-import ru.practicum.repository.EventRepository;
 import ru.practicum.repository.RequestRepository;
-import ru.practicum.StatClient;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

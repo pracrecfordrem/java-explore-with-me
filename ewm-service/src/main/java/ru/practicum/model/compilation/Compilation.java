@@ -6,7 +6,6 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import ru.practicum.model.event.Event;
 
-
 import java.util.List;
 
 @Entity

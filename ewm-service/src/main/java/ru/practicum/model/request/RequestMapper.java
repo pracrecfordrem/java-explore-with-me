@@ -1,7 +1,7 @@
 package ru.practicum.model.request;
 
 public class RequestMapper {
-    public static RequestDto toRequestDto (Request request) {
+    public static RequestDto toRequestDto(Request request) {
         return new RequestDto(
                 request.getId(),
                 request.getRequester().getId(),

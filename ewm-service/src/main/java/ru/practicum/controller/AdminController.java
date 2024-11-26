@@ -9,6 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.StatClient;
+import ru.practicum.model.category.Category;
+import ru.practicum.model.category.CategoryMappper;
+import ru.practicum.model.category.NewCategoryDto;
 import ru.practicum.model.compilation.Compilation;
 import ru.practicum.model.compilation.CompilationForUpdate;
 import ru.practicum.model.compilation.NewCompilationDto;
@@ -16,17 +19,15 @@ import ru.practicum.model.event.Event;
 import ru.practicum.model.event.EventDto;
 import ru.practicum.model.event.EventForUpdate;
 import ru.practicum.model.event.EventMapper;
+import ru.practicum.model.exception.Exception;
 import ru.practicum.model.user.NewUserDto;
 import ru.practicum.model.user.User;
 import ru.practicum.model.user.UserMapper;
 import ru.practicum.service.CategoryService;
-import ru.practicum.model.category.Category;
-import ru.practicum.model.category.CategoryMappper;
-import ru.practicum.model.category.NewCategoryDto;
 import ru.practicum.service.CompilationService;
 import ru.practicum.service.EventService;
 import ru.practicum.service.UserService;
-import ru.practicum.model.exception.Exception;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -69,9 +70,9 @@ public class AdminController {
                         categories,
                         rangeStart == null ? null : LocalDateTime.parse(rangeStart,CUSTOM_FORMATTER),
                         rangeEnd == null ? null : LocalDateTime.parse(rangeEnd,CUSTOM_FORMATTER)
-                ).stream().
-                map(event -> eventMapper.toEventDto(event,statClient)).
-                toList();
+                       ).stream()
+                        .map(event -> eventMapper.toEventDto(event,statClient))
+                        .toList();
         if (from > eventDtoList.size()) {
             eventDtoList = new ArrayList<>();
         } else if (size > eventDtoList.size()) {
