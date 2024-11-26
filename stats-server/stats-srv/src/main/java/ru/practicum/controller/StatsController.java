@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.StatsRequestDto;
-import ru.practicum.model.Stats;
 import ru.practicum.service.StatsService;
 
 import java.time.LocalDateTime;
@@ -20,8 +19,8 @@ public class StatsController {
     private final StatsService statsService;
 
     @PostMapping("/hit")
-    public Stats post(@RequestBody StatsRequestDto statsRequestDto) {
-        return statsService.post(statsRequestDto);
+    public ResponseEntity<Object> post(@RequestBody StatsRequestDto statsRequestDto) {
+        return new ResponseEntity<>(statsService.post(statsRequestDto),HttpStatus.CREATED);
     }
 
     @GetMapping("/stats")
