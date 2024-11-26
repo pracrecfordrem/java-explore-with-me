@@ -47,8 +47,8 @@ public class PrivateController {
                         null,
                         null)
                         .stream()
-                        .map(event -> eventMapper.toEventDto(event,statClient)).
-                toList();
+                        .map(event -> eventMapper.toEventDto(event,statClient))
+                        .toList();
         if (from > eventDtoList.size()) {
             eventDtoList = new ArrayList<>();
         } else if (size > eventDtoList.size()) {
