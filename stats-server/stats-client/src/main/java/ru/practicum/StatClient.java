@@ -11,7 +11,6 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -29,14 +28,14 @@ public class StatClient extends BaseClient {
         );
     }
 
-    public ResponseEntity<Object> get(String start, String end, String[] uris, Boolean isUnique) {
+    public ResponseEntity<Object> get(String start, String end, String[] uris, Boolean unique) {
         Map<String, Object> parameters = Map.of(
                 "start", start,
                 "end", end,
                 "uris", uris,
-                "isUnique",isUnique
+                "unique",unique
         );
-        return get("/stats?start={start}&end={end}&uris={uris}&isUnique={isUnique}", parameters);
+        return get("/stats?start={start}&end={end}&uris={uris}&unique={unique}", parameters);
     }
 
     public ResponseEntity<Object> post(String appName, HttpServletRequest request) {

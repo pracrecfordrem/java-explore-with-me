@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.StatClient;
 import ru.practicum.model.category.Category;
 import ru.practicum.model.event.*;
+import ru.practicum.model.exception.Exception;
 import ru.practicum.model.location.Location;
 import ru.practicum.model.location.LocationMapper;
 import ru.practicum.model.request.*;
@@ -105,17 +106,25 @@ public class PrivateController {
     }
 
     @PostMapping("/users/{userId}/requests")
-    public ResponseEntity<RequestDto> postRequest(
+    public ResponseEntity<Object> postRequest(
             @PathVariable Long userId,
             @RequestParam Long eventId) {
         User user = userService.getUserById(userId);
         Event event = eventService.getEventById(eventId);
+        System.out.println(event.getInitiator().getId() + " " + userId);
         if (event == null || user == null) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        } else if (requestService.getRequestByRequesterAndEvent(userId,eventId) != null || event.getInitiator().getId().equals(userId) ||
+                   !event.getState().equals("PUBLISHED") || (!(event.getParticipantLimit() - eventMapper.toEventDto(event, statClient).getConfirmedRequests() > 0
+                || event.getParticipantLimit() == 0))) {
+            return new ResponseEntity<>(new Exception("CONFLICT","Integrity constraint has been violated.","could not execute statement; SQL [n/a];" +
+                    " constraint [uq_request]; nested exception is org.hibernate.exception.ConstraintViolationException: " +
+                    "could not execute statement",LocalDateTime.now()),HttpStatus.CONFLICT);
         } else {
             Request request = new Request(null,user,event,
-                    eventMapper.toEventDto(event,statClient).getConfirmedRequests() - event.getParticipantLimit() > 0
-                            || event.getParticipantLimit() == 0 ?
+                    ((event.getParticipantLimit() - eventMapper.toEventDto(event,statClient).getConfirmedRequests() > 0
+                            || event.getParticipantLimit() == 0) && !event.getRequestModeration())
+                    || event.getParticipantLimit() == 0 ?
                             "CONFIRMED":"PENDING", LocalDateTime.now());
 
             return new ResponseEntity<>(RequestMapper.toRequestDto(requestService.createRequest(request)),HttpStatus.CREATED);
@@ -123,13 +132,19 @@ public class PrivateController {
     }
 
     @PatchMapping("/users/{userId}/events/{eventId}")
-    public ResponseEntity<Event> updatePersonalEvent(
+    public ResponseEntity<Object> updatePersonalEvent(
             @PathVariable Long userId,
             @PathVariable Long eventId,
             @Validated @RequestBody EventForUpdate eventForUpdate) {
         Event event = eventService.getEventById(eventId);
-        if (eventForUpdate.getStateAction() != null && eventForUpdate.getStateAction().equals("CANCEL_REVIEW")) {
+        if (event.getState().equals("PUBLISHED")) {
+            return new ResponseEntity<>(new Exception("CONFLICT","Integrity constraint has been violated.","could not execute statement; SQL [n/a];" +
+                    " constraint [uq_request]; nested exception is org.hibernate.exception.ConstraintViolationException: " +
+                    "could not execute statement",LocalDateTime.now()),HttpStatus.CONFLICT);
+        } else if (eventForUpdate.getStateAction() != null && eventForUpdate.getStateAction().equals("CANCEL_REVIEW")) {
             event.setState("CANCELED");
+        } else if (eventForUpdate.getStateAction() != null && eventForUpdate.getStateAction().equals("SEND_TO_REVIEW")) {
+            event.setState("PENDING");
         }
         return new ResponseEntity<>(eventService.createEvent(event),HttpStatus.OK);
     }
@@ -141,18 +156,23 @@ public class PrivateController {
         Request request = requestService.getRequestById(requestId);
         request.setStatus("CANCELED");
         RequestDto requestDto = RequestMapper.toRequestDto(requestService.createRequest(request));
-        System.out.println(requestDto);
         return new ResponseEntity<>(requestDto,HttpStatus.OK);
     }
 
     @PatchMapping("/users/{userId}/events/{eventId}/requests")
-    public ResponseEntity<RequestUserInfo> answerRequests (
+    public ResponseEntity<Object> answerRequests (
             @PathVariable Long userId,
             @PathVariable Long eventId,
             @RequestBody RequestChangeStatus requestChangeStatus
             ) {
+        Event event = eventService.getEventById(eventId);
+        if (!(event.getParticipantLimit() - eventMapper.toEventDto(event,statClient).getConfirmedRequests() > 0
+                || event.getParticipantLimit() == 0)) {
+            return new ResponseEntity<>(new Exception("CONFLICT","Integrity constraint has been violated.","could not execute statement; SQL [n/a];" +
+                    " constraint [uq_request]; nested exception is org.hibernate.exception.ConstraintViolationException: " +
+                    "could not execute statement",LocalDateTime.now()),HttpStatus.CONFLICT);
+        }
         RequestUserInfo requestUserInfo = requestService.answerRequests(userId,eventId,requestChangeStatus);
-        System.out.println(requestUserInfo);
         return new ResponseEntity<>(requestUserInfo,HttpStatus.OK);
     }
 }

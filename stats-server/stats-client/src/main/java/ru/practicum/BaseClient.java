@@ -27,7 +27,7 @@ public class BaseClient {
     private <T> ResponseEntity<Object> makeAndSendRequest(HttpMethod method, String path,
                                                           @Nullable Map<String, Object> parameters, @Nullable T body) {
         HttpEntity<T> requestEntity = body == null ? null : new HttpEntity<>(body);
-
+        System.out.println("-------------------------------" + path);
         ResponseEntity<Object> statsServiceResponse;
         try {
             if (parameters != null) {

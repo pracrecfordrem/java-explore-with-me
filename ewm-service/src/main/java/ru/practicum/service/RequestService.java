@@ -35,7 +35,6 @@ public class RequestService {
             requestRepository.save(request);
         }
         List<Request> requestList = requestRepository.getRequestsByEventId(eventId);
-        System.out.println("reqqqq" + " " + requestList);
         RequestUserInfo requestUserInfo = new RequestUserInfo();
         List<RequestDto> confirmedRequests = new ArrayList<>();
         List<RequestDto> rejectedRequests = new ArrayList<>();
@@ -49,5 +48,9 @@ public class RequestService {
         requestUserInfo.setConfirmedRequests(confirmedRequests);
         requestUserInfo.setRejectedRequests(rejectedRequests);
         return requestUserInfo;
+    }
+
+    public Request getRequestByRequesterAndEvent(Long userId, Long eventId) {
+        return requestRepository.getRequestByRequester_idAndEvent_id(userId, eventId);
     }
 }

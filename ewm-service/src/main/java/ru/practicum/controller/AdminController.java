@@ -10,6 +10,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.StatClient;
 import ru.practicum.model.compilation.Compilation;
+import ru.practicum.model.compilation.CompilationForUpdate;
 import ru.practicum.model.compilation.NewCompilationDto;
 import ru.practicum.model.event.Event;
 import ru.practicum.model.event.EventDto;
@@ -126,12 +127,19 @@ public class AdminController {
 
     }
 
+    @DeleteMapping("/compilations/{compId}")
+    public ResponseEntity<Object> deleteCompilation(@PathVariable Long compId) {
+        compilationService.deleteCompilation(compId);
+        return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+
+    }
+
     @PatchMapping("/categories/{catId}")
     public ResponseEntity<Object> updateCategory(@Validated @RequestBody NewCategoryDto newCategoryDto, @PathVariable Long catId) {
         Category category = categoryService.getCategoryById(catId);
         if (category == null) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        } else if (categoryService.findByName(newCategoryDto.getName()) != null) {
+        } else if (categoryService.findByName(newCategoryDto.getName()) != null && categoryService.findByName(newCategoryDto.getName()).getId() != category.getId()) {
             return new ResponseEntity<>(new Exception("CONFLICT", "Integrity constraint has been violated.","could not execute statement; SQL [n/a];" +
                     " constraint [uq_category_name]; nested exception is org.hibernate.exception.ConstraintViolationException: could not execute statement",
                     LocalDateTime.now()),HttpStatus.CONFLICT);
@@ -147,17 +155,19 @@ public class AdminController {
         Event event = eventService.getEventById(eventId);
         if (event == null) {
             return new ResponseEntity<>(null,HttpStatus.NOT_FOUND);
-        } else if (event.getState() != null && (event.getState().equals("PUBLISHED")) || event.getState().equals("CANCELED")) {
+        } else if (event.getState() != null && (event.getState().equals("PUBLISHED") || event.getState().equals("CANCELED"))) {
             return new ResponseEntity<>(new Exception("CONFLICT", "Integrity constraint has been violated.","could not execute statement; SQL [n/a];" +
                     " constraint [uq_category_name]; nested exception is org.hibernate.exception.ConstraintViolationException: could not execute statement",
                     LocalDateTime.now()),HttpStatus.CONFLICT);
         } else {
+            System.out.println(eventForUpdate);
             if (eventForUpdate.getStateAction() != null && eventForUpdate.getStateAction().equals("PUBLISH_EVENT")) {
                 event.setState("PUBLISHED");
             }
             if (eventForUpdate.getStateAction() != null && eventForUpdate.getStateAction().equals("REJECT_EVENT")) {
                 event.setState("CANCELED");
             }
+
             Category category = categoryService.getCategoryById(eventForUpdate.getCategory());
             if (eventForUpdate.getAnnotation() != null) {
                 event.setAnnotation(eventForUpdate.getAnnotation());
@@ -185,13 +195,17 @@ public class AdminController {
     }
 
     @PatchMapping("/compilations/{compId}")
-    public ResponseEntity<Object> updateCompilation(@Validated @RequestBody NewCompilationDto compilationDto,
+    public ResponseEntity<Object> updateCompilation(@Validated @RequestBody CompilationForUpdate compilationDto,
                                                          @PathVariable Long compId) {
         Compilation compilation = compilationService.getCompilationById(compId);
         if (compilation == null) {
             return new ResponseEntity<>(new Exception("NOT_FOUND", "The required object was not found.", "Compilation with id= " + compId + " was not found",LocalDateTime.now()),HttpStatus.NOT_FOUND);
         } else {
-            return new ResponseEntity<>(compilationService.createCompilation(compilationDto),HttpStatus.OK);
+            NewCompilationDto newCompilationDto = new NewCompilationDto(compilationDto.getEvents() != null ? compilationDto.getEvents() :
+                    compilation.getEvents().stream().map(Event::getId).toList(),compilationDto.getPinned() != null ? compilationDto.getPinned() :
+                    compilation.getPinned(),
+                    compilationDto.getTitle() != null ? compilationDto.getTitle() : compilation.getTitle());
+            return new ResponseEntity<>(compilationService.updateCompilation(newCompilationDto,compId),HttpStatus.OK);
         }
     }
 

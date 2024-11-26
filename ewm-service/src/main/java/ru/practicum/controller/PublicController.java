@@ -85,7 +85,7 @@ public class PublicController {
     }
 
     @GetMapping("/events/{eventId}")
-    public ResponseEntity<Object> getFullEvent(@PathVariable(required = true) Long eventId, HttpServletRequest request) {
+    public ResponseEntity<Object> getFullEvent(@PathVariable Long eventId, HttpServletRequest request) {
         statClient.post(APP_NAME,request);
         Event event = eventService.getEventById(eventId);
         if (event == null || !event.getState().equals("PUBLISHED")) {
@@ -111,6 +111,15 @@ public class PublicController {
             compilations = compilations.subList(from,size);
         }
         return new ResponseEntity<>(compilations,HttpStatus.OK);
+    }
+
+    @GetMapping("/compilations/{compId}")
+    public ResponseEntity<Compilation> getCompilation(@PathVariable Long compId) {
+        Compilation compilation = compilationService.getCompilationById(compId);
+        if (compilation == null) {
+            return new ResponseEntity<>(null,HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(compilation,HttpStatus.OK);
     }
 
 }

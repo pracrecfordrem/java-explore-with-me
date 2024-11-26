@@ -28,4 +28,6 @@ public interface RequestRepository extends JpaRepository<Request,Long> {
             "                             from event_requests er " +
             "                            where er.event_id = ?1 ")
     List<Request> getRequestsByEventId(Long eventId);
+
+    Request getRequestByRequester_idAndEvent_id(Long userId, Long eventId);
 }

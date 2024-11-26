@@ -27,13 +27,9 @@ public class StatsController {
     public List<Hit> get(@RequestParam String start,
                          @RequestParam String end,
                          @RequestParam(required = false) List<String> uris,
-                         @RequestParam(required = false, defaultValue = "false") Boolean isUnique,
+                         @RequestParam(required = false, defaultValue = "false") Boolean unique,
                          HttpServletRequest request
                            ) {
-        System.out.println(request.getRequestURI());
-        for (String key:  request.getParameterMap().keySet()) {
-            System.out.println(key + " " + request.getParameter(key));
-        }
-        return statsService.get(LocalDateTime.parse(start,CUSTOM_FORMATTER),LocalDateTime.parse(end,CUSTOM_FORMATTER),uris,isUnique);
+        return statsService.get(LocalDateTime.parse(start,CUSTOM_FORMATTER),LocalDateTime.parse(end,CUSTOM_FORMATTER),uris,unique);
     }
 }

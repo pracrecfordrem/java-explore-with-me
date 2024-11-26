@@ -22,7 +22,6 @@ import java.util.Map;
 public class EventMapper {
 
     private static final DateTimeFormatter CUSTOM_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private final EventRepository eventRepository;
     private final RequestRepository requestRepository;
 
     public static Event toEvent(NewEventDto newEventDto,
@@ -81,7 +80,8 @@ public class EventMapper {
         List<Map<String, Object>> statsResponseList = objectMapper.convertValue(response.getBody(), new TypeReference<>() {
         });
          if (!statsResponseList.isEmpty()) {
-             return (Integer) statsResponseList.get(0).get("hits");
+             System.out.println(statsResponseList.getFirst());
+             return (Integer) statsResponseList.getFirst().get("hits");
          } else {
              return 0;
          }
