@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.StatsRequestDto;
-import ru.practicum.model.Hit;
 import ru.practicum.model.Stats;
 import ru.practicum.service.StatsService;
 
