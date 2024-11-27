@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -27,10 +28,10 @@ import ru.practicum.service.CategoryService;
 import ru.practicum.service.CompilationService;
 import ru.practicum.service.EventService;
 import ru.practicum.service.UserService;
+import ru.practicum.util.Util;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 @AllArgsConstructor
@@ -73,23 +74,22 @@ public class AdminController {
                        ).stream()
                         .map(event -> eventMapper.toEventDto(event,statClient))
                         .toList();
-        if (from > eventDtoList.size()) {
-            eventDtoList = new ArrayList<>();
-        } else if (size > eventDtoList.size()) {
-            eventDtoList = eventDtoList.subList(from,eventDtoList.size());
-        } else {
-            eventDtoList = eventDtoList.subList(from,size);
-        }
-        return new ResponseEntity<>(eventDtoList,HttpStatus.OK);
+        List<EventDto> subEventDtoList = Util.applyPagination(eventDtoList,from,size);
+        return new ResponseEntity<>(subEventDtoList,HttpStatus.OK);
 
     }
 
     @PostMapping("/categories")
     public ResponseEntity<Object> createCategory(@Valid @RequestBody NewCategoryDto newCategoryDto) {
-        if (categoryService.findByName(newCategoryDto.getName()) != null) {
-            return new ResponseEntity<>(new Exception("CONFLICT", "Integrity constraint has been violated.","could not execute statement; SQL [n/a]; constraint [uq_category_name]; nested exception is org.hibernate.exception.ConstraintViolationException: could not execute statement",LocalDateTime.now()),HttpStatus.CONFLICT);
+        Category category;
+        try {
+            category = categoryService.createCategory(CategoryMappper.toCategory(newCategoryDto));
+        } catch (DataIntegrityViolationException e) {
+            return new ResponseEntity<>(new Exception("CONFLICT", "Integrity constraint has been violated.",
+                    "could not execute statement; SQL [n/a]; constraint [uq_category_name]; nested exception is org.hibernate.exception.ConstraintViolationException: " +
+                            "could not execute statement",LocalDateTime.now()),HttpStatus.CONFLICT);
         }
-        return new ResponseEntity<>(categoryService.createCategory(CategoryMappper.toCategory(newCategoryDto)), HttpStatus.CREATED);
+            return new ResponseEntity<>(category, HttpStatus.CREATED);
     }
 
     @PostMapping("/users")
@@ -140,14 +140,16 @@ public class AdminController {
         Category category = categoryService.getCategoryById(catId);
         if (category == null) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        } else if (categoryService.findByName(newCategoryDto.getName()) != null && categoryService.findByName(newCategoryDto.getName()).getId() != category.getId()) {
+        }
+        try {
+            category.setName(newCategoryDto.getName());
+            category = categoryService.createCategory(category);
+        } catch (DataIntegrityViolationException e) {
             return new ResponseEntity<>(new Exception("CONFLICT", "Integrity constraint has been violated.","could not execute statement; SQL [n/a];" +
                     " constraint [uq_category_name]; nested exception is org.hibernate.exception.ConstraintViolationException: could not execute statement",
                     LocalDateTime.now()),HttpStatus.CONFLICT);
-        } else {
-            category.setName(newCategoryDto.getName());
-            return new ResponseEntity<>(categoryService.createCategory(category),HttpStatus.OK);
         }
+        return new ResponseEntity<>(categoryService.createCategory(category),HttpStatus.OK);
     }
 
     @PatchMapping("/events/{eventId}")
@@ -209,29 +211,4 @@ public class AdminController {
             return new ResponseEntity<>(compilationService.updateCompilation(newCompilationDto,compId),HttpStatus.OK);
         }
     }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -19,9 +19,9 @@ import ru.practicum.service.CategoryService;
 import ru.practicum.service.EventService;
 import ru.practicum.service.RequestService;
 import ru.practicum.service.UserService;
+import ru.practicum.util.Util;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @AllArgsConstructor
@@ -49,14 +49,8 @@ public class PrivateController {
                         .stream()
                         .map(event -> eventMapper.toEventDto(event,statClient))
                         .toList();
-        if (from > eventDtoList.size()) {
-            eventDtoList = new ArrayList<>();
-        } else if (size > eventDtoList.size()) {
-            eventDtoList = eventDtoList.subList(from,eventDtoList.size());
-        } else {
-            eventDtoList = eventDtoList.subList(from,size);
-        }
-        return new ResponseEntity<>(eventDtoList, HttpStatus.OK);
+        List<EventDto> subEventDtoList = Util.applyPagination(eventDtoList,from, size);
+        return new ResponseEntity<>(subEventDtoList, HttpStatus.OK);
     }
 
     @GetMapping("/users/{userId}/events/{eventId}")

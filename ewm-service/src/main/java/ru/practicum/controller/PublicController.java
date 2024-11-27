@@ -17,10 +17,10 @@ import ru.practicum.model.exception.Exception;
 import ru.practicum.service.CategoryService;
 import ru.practicum.service.CompilationService;
 import ru.practicum.service.EventService;
+import ru.practicum.util.Util;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 @AllArgsConstructor
@@ -75,14 +75,8 @@ public class PublicController {
                         onlyAvailable,
                         sort).stream()
                              .map(event -> eventMapper.toEventDto(event,statClient)).toList();
-        if (from > eventDtoList.size()) {
-            eventDtoList = new ArrayList<>();
-        } else if (size > eventDtoList.size()) {
-            eventDtoList = eventDtoList.subList(from,eventDtoList.size());
-        } else {
-            eventDtoList = eventDtoList.subList(from,size);
-        }
-        return new ResponseEntity<>(eventDtoList,HttpStatus.OK);
+        List<EventDto> subEventDtoList = Util.applyPagination(eventDtoList,from,size);
+        return new ResponseEntity<>(subEventDtoList,HttpStatus.OK);
     }
 
     @GetMapping("/events/{eventId}")
@@ -104,14 +98,8 @@ public class PublicController {
                                                              @RequestParam(required = false, defaultValue = "0") Integer from,
                                                              @RequestParam(required = false, defaultValue = "10") Integer size) {
         List<Compilation> compilations = compilationService.getCompilations(pinned,from,size);
-        if (from > compilations.size()) {
-            compilations = new ArrayList<>();
-        } else if (size > compilations.size()) {
-            compilations = compilations.subList(from,compilations.size());
-        } else {
-            compilations = compilations.subList(from,size);
-        }
-        return new ResponseEntity<>(compilations,HttpStatus.OK);
+        List<Compilation> subCompilations = Util.applyPagination(compilations,from,size);
+        return new ResponseEntity<>(subCompilations,HttpStatus.OK);
     }
 
     @GetMapping("/compilations/{compId}")

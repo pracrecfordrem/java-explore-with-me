@@ -1,6 +1,7 @@
 package ru.practicum.service;
 
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import ru.practicum.model.category.Category;
 import ru.practicum.repository.CategoryRepository;
@@ -15,8 +16,12 @@ public class CategoryService {
         this.categoryRepository = categoryRepository;
     }
 
-    public Category createCategory(Category category) {
-        return categoryRepository.save(category);
+    public Category createCategory(Category category) throws DataIntegrityViolationException {
+        try {
+            return categoryRepository.save(category);
+        } catch (DataIntegrityViolationException e) {
+            throw new DataIntegrityViolationException("unique constraint violation");
+        }
     }
 
     public List<Category> getCategories(Long from, Long size) {
@@ -29,9 +34,5 @@ public class CategoryService {
 
     public void deleteCategory(Long catId) {
         categoryRepository.deleteById(catId);
-    }
-
-    public Category findByName(String name) {
-        return categoryRepository.getCategoryByName(name);
     }
 }
