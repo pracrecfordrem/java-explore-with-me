@@ -9,12 +9,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.StatClient;
 import ru.practicum.model.category.Category;
+import ru.practicum.model.comment.Comment;
 import ru.practicum.model.compilation.Compilation;
 import ru.practicum.model.event.Event;
 import ru.practicum.model.event.EventDto;
 import ru.practicum.model.event.EventMapper;
 import ru.practicum.model.exception.Exception;
 import ru.practicum.service.CategoryService;
+import ru.practicum.service.CommentService;
 import ru.practicum.service.CompilationService;
 import ru.practicum.service.EventService;
 import ru.practicum.util.Util;
@@ -34,6 +36,7 @@ public class PublicController {
     private final EventService eventService;
     private final EventMapper eventMapper;
     private final StatClient statClient;
+    private final CommentService commentService;
     private static final DateTimeFormatter CUSTOM_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     public static final String APP_NAME = "ExploreWithMe-main-service";
 
@@ -109,6 +112,14 @@ public class PublicController {
             return new ResponseEntity<>(null,HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(compilation,HttpStatus.OK);
+    }
+
+    @GetMapping("/events/{eventId}/comments")
+    public ResponseEntity<List<Comment>> getEventComments(@PathVariable Long eventId,
+                                                          @RequestParam(required = false, defaultValue = "0") Integer from,
+                                                          @RequestParam(required = false, defaultValue = "10") Integer size) {
+        List<Comment> comments = Util.applyPagination(commentService.getEventComments(eventId),from,size);
+        return new ResponseEntity<>(comments,HttpStatus.OK);
     }
 
 }
