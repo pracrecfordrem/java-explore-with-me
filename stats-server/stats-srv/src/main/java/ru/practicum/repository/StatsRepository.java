@@ -12,26 +12,24 @@ import java.util.List;
 public interface StatsRepository extends JpaRepository<Stats,Long> {
 
     @Query(value =
-                    "select new ru.practicum.model.Hit (s.app,\n" +
+                    "select new ru.practicum.model.Hit (max(s.app),\n" +
                     "       s.uri,\n" +
                     "       count(s.ip))\n" +
                     " from ru.practicum.model.Stats s \n" +
                     "where s.timestamp >= :start " +
                     "  and s.timestamp <= :end " +
                     "  and (:values IS NULL or s.uri in :values)" +
-                    " group by s.app,\n" +
-                    "      \t  s.uri ")
+                    " group by s.uri ")
     List<Hit> getHits(@Param("start")LocalDateTime start, @Param("end")LocalDateTime end, @Param("values")List<String> values);
 
     @Query(value =
-            "select new ru.practicum.model.Hit (s.app,\n" +
+            "select new ru.practicum.model.Hit (max(s.app),\n" +
                     "       s.uri,\n" +
                     "       count(distinct s.ip))\n" +
                     " from ru.practicum.model.Stats s \n" +
                     "where s.timestamp >= :start " +
                     "  and s.timestamp <= :end " +
                     "  and (:values IS NULL or s.uri in :values)" +
-                    " group by s.app,\n" +
-                    "      \t  s.uri ")
+                    " group by s.uri ")
     List<Hit> getDistinctIpHits(@Param("start")LocalDateTime start, @Param("end")LocalDateTime end, @Param("values")List<String> values);
 }

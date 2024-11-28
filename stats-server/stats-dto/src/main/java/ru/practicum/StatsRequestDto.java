@@ -1,9 +1,10 @@
 package ru.practicum;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
-
+@AllArgsConstructor
 @Data
 public class StatsRequestDto {
     @NotBlank(message = "App name shouldn't be null or empty")
