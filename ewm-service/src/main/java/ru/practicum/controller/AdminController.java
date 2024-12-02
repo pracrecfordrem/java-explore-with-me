@@ -13,6 +13,8 @@ import ru.practicum.StatClient;
 import ru.practicum.model.category.Category;
 import ru.practicum.model.category.CategoryMappper;
 import ru.practicum.model.category.NewCategoryDto;
+import ru.practicum.model.comment.Comment;
+import ru.practicum.model.comment.CommentModeration;
 import ru.practicum.model.compilation.Compilation;
 import ru.practicum.model.compilation.CompilationForUpdate;
 import ru.practicum.model.compilation.NewCompilationDto;
@@ -24,10 +26,7 @@ import ru.practicum.model.exception.Exception;
 import ru.practicum.model.user.NewUserDto;
 import ru.practicum.model.user.User;
 import ru.practicum.model.user.UserMapper;
-import ru.practicum.service.CategoryService;
-import ru.practicum.service.CompilationService;
-import ru.practicum.service.EventService;
-import ru.practicum.service.UserService;
+import ru.practicum.service.*;
 import ru.practicum.util.Util;
 
 import java.time.LocalDateTime;
@@ -45,7 +44,7 @@ public class AdminController {
     private final UserService userService;
     private final EventService eventService;
     private final CompilationService compilationService;
-
+    private final CommentService commentService;
 
     private final EventMapper eventMapper;
     private final StatClient statClient;
@@ -211,4 +210,36 @@ public class AdminController {
             return new ResponseEntity<>(compilationService.updateCompilation(newCompilationDto,compId),HttpStatus.OK);
         }
     }
+
+    @PatchMapping("/comments/{commentId}/complains/answer")
+    public ResponseEntity<Object> approveComplain(@RequestBody CommentModeration commentModeration,
+                                                 @PathVariable Long commentId) {
+        Comment comment = commentService.getCommentById(commentId);
+        if (comment == null) {
+            return new ResponseEntity<>(new Exception("NOT_FOUND", "The required object was not found.", "Comment with id= " + commentId + " was not found",LocalDateTime.now()),HttpStatus.NOT_FOUND);
+        } else if (commentModeration.getAction().equals("APPROVE_COMPLAIN")) {
+            comment.setStatus("BANNED");
+        } else if (commentModeration.getAction().equals("DISPROVE_COMPLAIN")) {
+            comment.setStatus("PUBLISHED");
+        }
+        return new ResponseEntity<>(commentService.comment(comment),HttpStatus.OK);
+    }
+
+    @GetMapping("/events/{eventId}/comments")
+    public ResponseEntity<List<Comment>> getEventComments(@PathVariable Long eventId,
+                                                          @RequestParam(required = false, defaultValue = "0") Integer from,
+                                                          @RequestParam(required = false, defaultValue = "10") Integer size) {
+        List<Comment> comments = Util.applyPagination(commentService.getEventComments(eventId),from,size);
+        return new ResponseEntity<>(comments,HttpStatus.OK);
+    }
+
+    @GetMapping("/comments/{commentId}")
+    public ResponseEntity<Object> getEventComments(@PathVariable Long commentId) {
+        Comment comment = commentService.getCommentById(commentId);
+        if (comment == null) {
+            return new ResponseEntity<>(new Exception("NOT_FOUND", "The required object was not found.", "Comment with id= " + commentId + " was not found",LocalDateTime.now()),HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(comment,HttpStatus.OK);
+    }
+
 }
