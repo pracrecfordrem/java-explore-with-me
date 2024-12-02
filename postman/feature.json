@@ -141,6 +141,9 @@
 							"            }),\r",
 							"            options: { raw: { language: 'json' } }\r",
 							"        });\r",
+							"        console.log(\"User ID:\", pm.collectionVariables.get(\"uid\"));\r",
+							"        console.log(\"Comment ID:\", pm.collectionVariables.get(\"comid\"));\r",
+							"        console.log(\"Text Variable:\", textvar);\r",
 							"    } catch(err) {\r",
 							"        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
 							"    }\r",
@@ -202,6 +205,15 @@
 			"request": {
 				"method": "PATCH",
 				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{{request_body}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
 				"url": {
 					"raw": "http://localhost:8080/users/:userId/comments/:commentId",
 					"protocol": "http",
@@ -429,6 +441,15 @@
 			"request": {
 				"method": "PATCH",
 				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{{request_body}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
 				"url": {
 					"raw": "http://localhost:8080/admin/comments/:commentId/complains/answer",
 					"protocol": "http",
