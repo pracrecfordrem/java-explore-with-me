@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.StatClient;
 import ru.practicum.model.category.Category;
 import ru.practicum.model.comment.Comment;
-import ru.practicum.model.comment.CommentMapper;
 import ru.practicum.model.comment.CommentDto;
+import ru.practicum.model.comment.CommentMapper;
 import ru.practicum.model.event.*;
 import ru.practicum.model.exception.Exception;
 import ru.practicum.model.location.Location;
@@ -21,7 +21,6 @@ import ru.practicum.repository.LocationRepository;
 import ru.practicum.service.*;
 import ru.practicum.util.Util;
 
-import java.net.http.HttpRequest;
 import java.time.LocalDateTime;
 import java.util.List;
 
