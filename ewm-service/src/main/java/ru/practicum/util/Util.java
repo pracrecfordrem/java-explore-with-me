@@ -1,12 +1,8 @@
 package ru.practicum.util;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import ru.practicum.model.comment.Comment;
 import ru.practicum.model.comment.CommentModeration;
-import ru.practicum.model.exception.Exception;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
