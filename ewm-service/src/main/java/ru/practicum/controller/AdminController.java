@@ -5,6 +5,8 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -217,10 +219,8 @@ public class AdminController {
         Comment comment = commentService.getCommentById(commentId);
         if (comment == null) {
             return new ResponseEntity<>(new Exception("NOT_FOUND", "The required object was not found.", "Comment with id= " + commentId + " was not found",LocalDateTime.now()),HttpStatus.NOT_FOUND);
-        } else if (commentModeration.getAction().equals("APPROVE_COMPLAIN")) {
-            comment.setStatus("BANNED");
-        } else if (commentModeration.getAction().equals("DISPROVE_COMPLAIN")) {
-            comment.setStatus("PUBLISHED");
+        } else {
+            Util.updateComment(commentModeration, comment);
         }
         return new ResponseEntity<>(commentService.comment(comment),HttpStatus.OK);
     }
@@ -229,7 +229,10 @@ public class AdminController {
     public ResponseEntity<List<Comment>> getEventComments(@PathVariable Long eventId,
                                                           @RequestParam(required = false, defaultValue = "0") Integer from,
                                                           @RequestParam(required = false, defaultValue = "10") Integer size) {
-        List<Comment> comments = Util.applyPagination(commentService.getEventComments(eventId),from,size);
+        int pageNumber = from / size;
+        int remainder = from % size;
+        Pageable pageable = PageRequest.of(pageNumber, size);
+        List<Comment> comments = Util.applyPagination(commentService.getEventComments(eventId,pageable).stream().toList(),remainder);
         return new ResponseEntity<>(comments,HttpStatus.OK);
     }
 

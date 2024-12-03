@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -118,7 +120,10 @@ public class PublicController {
     public ResponseEntity<List<Comment>> getEventComments(@PathVariable Long eventId,
                                                           @RequestParam(required = false, defaultValue = "0") Integer from,
                                                           @RequestParam(required = false, defaultValue = "10") Integer size) {
-        List<Comment> comments = Util.applyPagination(commentService.getEventComments(eventId),from,size);
+        int pageNumber = from / size;
+        int remainder = from % size;
+        Pageable pageable = PageRequest.of(pageNumber, size);
+        List<Comment> comments = Util.applyPagination(commentService.getEventComments(eventId,pageable).stream().toList(),remainder);
         return new ResponseEntity<>(comments,HttpStatus.OK);
     }
 

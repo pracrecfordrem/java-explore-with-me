@@ -1,11 +1,12 @@
 package ru.practicum.service;
 
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.model.comment.Comment;
 import ru.practicum.repository.CommentRepository;
 
-import java.util.List;
 
 @AllArgsConstructor
 @Service
@@ -20,7 +21,7 @@ public class CommentService {
         return commentRepository.findById(commentId).orElse(null);
     }
 
-    public List<Comment> getEventComments(Long eventId) {
-        return commentRepository.getEventComments(eventId);
+    public Page<Comment> getEventComments(Long eventId, Pageable pageable) {
+        return commentRepository.getEventComments(eventId, pageable);
     }
 }
