@@ -8,6 +8,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.StatClient;
 import ru.practicum.model.category.Category;
+import ru.practicum.model.comment.Comment;
+import ru.practicum.model.comment.CommentDto;
+import ru.practicum.model.comment.CommentMapper;
 import ru.practicum.model.event.*;
 import ru.practicum.model.exception.Exception;
 import ru.practicum.model.location.Location;
@@ -15,10 +18,7 @@ import ru.practicum.model.location.LocationMapper;
 import ru.practicum.model.request.*;
 import ru.practicum.model.user.User;
 import ru.practicum.repository.LocationRepository;
-import ru.practicum.service.CategoryService;
-import ru.practicum.service.EventService;
-import ru.practicum.service.RequestService;
-import ru.practicum.service.UserService;
+import ru.practicum.service.*;
 import ru.practicum.util.Util;
 
 import java.time.LocalDateTime;
@@ -35,6 +35,7 @@ public class PrivateController {
     private final CategoryService categoryService;
     private final LocationRepository locationRepository;
     private final RequestService requestService;
+    private final CommentService commentService;
     private final StatClient statClient;
 
     @GetMapping("/users/{userId}/events")
@@ -144,6 +145,50 @@ public class PrivateController {
         return new ResponseEntity<>(eventService.createEvent(event),HttpStatus.OK);
     }
 
+    @PostMapping("/users/{userId}/events/{eventId}/comments")
+    public ResponseEntity<Object> comment(@PathVariable Long userId,
+                                          @PathVariable Long eventId,
+                                          @RequestBody CommentDto commentDto) {
+        User user = userService.getUserById(userId);
+        Event event = eventService.getEventById(eventId);
+        if (user == null) {
+            return new ResponseEntity<>(new Exception("NOT_FOUND", "The required object was not found.", "User with id= " + userId + " was not found",LocalDateTime.now()),HttpStatus.NOT_FOUND);
+        } else if (event == null) {
+            return new ResponseEntity<>(new Exception("NOT_FOUND", "The required object was not found.", "Event with id= " + eventId + " was not found",LocalDateTime.now()),HttpStatus.NOT_FOUND);
+        } else if (!event.getState().equals("PUBLISHED")) {
+            return new ResponseEntity<>(new Exception("CONFLICT", "Not authorized to comment not published events", "Event with id= " + eventId + " was not published",LocalDateTime.now()),HttpStatus.CONFLICT);
+        }
+        return new ResponseEntity<>(commentService.comment(CommentMapper.toComment(user,event, commentDto, "PUBLISHED")),
+                HttpStatus.CREATED);
+    }
+
+    @PatchMapping("/users/{userId}/comments/{commentId}")
+    public ResponseEntity<Object> updateComment(@PathVariable Long userId,
+                                                @PathVariable Long commentId,
+                                                @RequestBody CommentDto commentDto) {
+        Comment comment = commentService.getCommentById(commentId);
+        if (comment == null) {
+            return new ResponseEntity<>(new Exception("NOT_FOUND", "The required object was not found.", "Comment with id= " + commentId + " was not found",LocalDateTime.now()),HttpStatus.NOT_FOUND);
+        } else if (!comment.getUser().getId().equals(userId)) {
+            return new ResponseEntity<>(new Exception("CONFLICT", "Not authorized to update not own comments", "Comment with id= " + commentId + " was is forbidden to update",LocalDateTime.now()),HttpStatus.CONFLICT);
+        } else if (comment.getStatus().equals("BANNED")) {
+            return new ResponseEntity<>(new Exception("CONFLICT", "Not authorized to update banned comments", "Comment with id= " + commentId + " is has been banned",LocalDateTime.now()),HttpStatus.CONFLICT);
+        }
+        comment.setText(commentDto.getText());
+        return new ResponseEntity<>(commentService.comment(comment),HttpStatus.OK);
+    }
+
+    @PatchMapping("/users/{userId}/comments/{commentId}/complain")
+    public ResponseEntity<Object> complain(@PathVariable Long userId,
+                                            @PathVariable Long commentId) {
+        Comment comment = commentService.getCommentById(commentId);
+        if (comment == null || !comment.getStatus().equals("PUBLISHED")) {
+            return new ResponseEntity<>(new Exception("NOT_FOUND", "The required object was not found.", "Comment with id= " + commentId + " was not found",LocalDateTime.now()),HttpStatus.NOT_FOUND);
+        }
+        comment.setStatus("PENDING");
+        return new ResponseEntity<>(commentService.comment(comment),HttpStatus.OK);
+    }
+
     @PatchMapping("/users/{userId}/requests/{requestId}/cancel")
     public ResponseEntity<RequestDto> cancelEventRequest(
             @PathVariable Long userId,
@@ -153,6 +198,8 @@ public class PrivateController {
         RequestDto requestDto = RequestMapper.toRequestDto(requestService.createRequest(request));
         return new ResponseEntity<>(requestDto,HttpStatus.OK);
     }
+
+
 
     @PatchMapping("/users/{userId}/events/{eventId}/requests")
     public ResponseEntity<Object> answerRequests(
